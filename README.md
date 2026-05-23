@@ -1,0 +1,377 @@
+# Django Boilerplate
+
+Production-ready Django project template. Clone, configure `.env`, deploy.
+
+---
+
+## Stack
+
+| Warstwa        | Technologia                                        |
+|----------------|----------------------------------------------------|
+| Framework      | Django 5.2                                         |
+| API            | Django REST Framework 3.17 + drf-spectacular       |
+| Baza danych    | PostgreSQL 17 + psycopg 3                          |
+| Auth           | Custom User model + JWT (simplejwt)                |
+| Logging        | structlog → JSON                                   |
+| Monitoring     | django-prometheus → Prometheus → Grafana           |
+| Error tracking | Sentry SDK                                         |
+| Bezpieczeństwo | django-csp, bleach, python-magic                   |
+| Config         | python-decouple (`.env`)                           |
+| Serwer         | uWSGI + Nginx                                      |
+| SSL            | Let's Encrypt (certbot)                            |
+| Kontenery      | Docker / Docker Compose                            |
+| Jakość kodu    | ruff, mypy, bandit, pip-audit, pre-commit          |
+| Testy          | pytest + factory-boy + coverage                    |
+
+---
+
+## Biblioteki — uzasadnienie
+
+### Framework i API
+
+**Django 5.2** — LTS release z pełnym ekosystemem: ORM, admin, migracje, middleware. Wersja `<5.3` przypięta żeby uniknąć nieoczekiwanych breaking changes przy patch-ach.
+
+**Django REST Framework 3.17** — de facto standard REST API w Django. Serializery, widoki generyczne, permissions, throttling. Zintegrowany z resztą stacku.
+
+**drf-spectacular** — generuje schemat OpenAPI 3 (Swagger UI / ReDoc) bezpośrednio z kodu DRF. Alternatywa `drf-yasg` nie wspiera OpenAPI 3. Schemat jest niezbędny przy API-first development i generowaniu klientów TypeScript/mobile.
+
+**djangorestframework-simplejwt** — JWT authentication dla SPA i klientów mobilnych. SessionAuthentication pozostaje jako fallback dla przeglądarki. JWT nie wymaga trzymania sesji po stronie serwera, co upraszcza skalowanie horyzontalne.
+
+### Baza danych
+
+**psycopg[binary] 3.x** — psycopg3, następca psycopg2. Szybsze pipeline queries, natywna obsługa async, lepiej rozwijane. Django 5.2 ma pełne wsparcie psycopg3. `[binary]` bundle zawiera prebuilt libpq — nie wymaga systemowego `libpq-dev` w runtime image.
+
+**django-prometheus** (backend bazy) — zamienia domyślny backend PostgreSQL na wrapper który mierzy czas i liczbę zapytań SQL. Zmiana jednej linii w settings, zero zmian w kodzie.
+
+### Bezpieczeństwo
+
+**django-csp** — dodaje nagłówek `Content-Security-Policy` do każdej odpowiedzi. CSP blokuje XSS na poziomie przeglądarki — nawet jeśli atakujący wstrzyknie skrypt, przeglądarka odmówi jego wykonania bo nie pochodzi z whitelisty. Konfiguracja w `base.py`.
+
+**bleach** — sanityzacja HTML na poziomie aplikacji: `sanitize_html()` w `apps/core/utils.py`. Używać wszędzie tam gdzie user-generated content trafia do bazy i z powrotem do HTML. django-csp chroni przed XSS w przeglądarce, bleach chroni przed XSS zanim dane trafią do bazy.
+
+**python-magic** — weryfikuje rzeczywisty MIME type pliku przez odczyt magic bytes, nie tylko rozszerzenie. Plik `evil.exe` z rozszerzeniem `.jpg` zostanie odrzucony. Używany w `validate_file_extension()` w `apps/core/validators.py`. Wymaga `libmagic1` w kontenerze (jest w Dockerfile).
+
+### Logging
+
+**structlog** — logi jako JSON zamiast płaskiego tekstu. Każdy log-line to obiekt z polami `event`, `level`, `timestamp`, plus dowolne pola kontekstowe (request_id, user_id). JSON może być parsowany przez Loki, Elasticsearch, CloudWatch bez regexów. Zintegrowany z Django `logging` przez `ProcessorFormatter` — logi Django (`django.request`, `django.db`) też idą przez structlog.
+
+### Monitoring i obserwowalność
+
+**django-prometheus** — instrumentuje Django bez zmian w kodzie aplikacji:
+- middleware mierzy czas i liczbę requestów HTTP (z podziałem na status, metodę, widok)
+- backend bazy mierzy zapytania SQL
+- metryki eksportuje na porcie `9100` (wewnętrznym, niedostępnym z zewnątrz)
+
+**Prometheus** — baza danych szeregów czasowych wyspecjalizowana w metrykach. Co 15s robi GET na `web:9100/metrics` i zapisuje dane. Posiada własny język zapytań (PromQL) i silnik alertów. Dane trzymane 30 dni (konfigurowalne).
+
+**Grafana** — wizualizacja metryk z Prometheusa. Dostępna na `localhost:3000` (przez SSH tunnel — nie wystawiona publicznie). Datasource i lokalizacja dashboardów skonfigurowane automatycznie przez provisioning (`config/grafana/provisioning/`). Import gotowych dashboardów: [Django](https://grafana.com/grafana/dashboards/17658), [PostgreSQL](https://grafana.com/grafana/dashboards/9628).
+
+### Error tracking
+
+**Sentry SDK** — przechwytuje nieobsłużone wyjątki i wysyła do Sentry (SaaS lub self-hosted) wraz z pełnym stack trace, kontekstem requesta i zmiennymi lokalnymi. `send_default_pii=False` — nie wysyła danych osobowych. `traces_sample_rate=0.1` — 10% requestów jest tracowanych (performance). Konfiguracja przez `SENTRY_DSN` w `.env`.
+
+### Konfiguracja
+
+**python-decouple** — odczytuje zmienne ze środowiska lub pliku `.env`. Hierarchia: env var → `.env` → wartość domyślna. `Csv()` cast automatycznie splituje `ALLOWED_HOSTS=foo.com,bar.com` na listę. `.env` nie trafia do repozytorium (`.gitignore`), `.env.example` dokumentuje wszystkie wymagane zmienne.
+
+### Serwer
+
+**uWSGI** — WSGI application server dla produkcji. Obsługuje wiele workerów, preforking, graceful reload (`SIGUSR1`). Konfiguracja w `config/uwsgi/uwsgi.ini`. Tylko w produkcji — development używa `runserver`.
+
+**Nginx** — reverse proxy przed uWSGI. Obsługuje SSL termination, serwuje static files i media bez angażowania Pythona, buforuje upload plików. W dev: HTTP na 80. W prod: HTTP redirect → HTTPS na 443, certyfikaty z Let's Encrypt.
+
+### CORS
+
+**django-cors-headers** — nagłówki CORS dla requestów z przeglądarki (SPA, mobile). W produkcji lista domen w `CORS_ALLOWED_ORIGINS`. W developmencie `CORS_ALLOW_ALL_ORIGINS=True` dla wygody.
+
+### Jakość kodu i testy
+
+**ruff** — linter i formatter (zastępuje flake8 + isort + black). Napisany w Rust, ~100x szybszy. Konfiguracja w `pyproject.toml`.
+
+**mypy + django-stubs** — statyczna analiza typów. `django-stubs` dostarcza typy dla Django ORM, requestów, modeli. Konfiguracja w `pyproject.toml` pod `[tool.mypy]`.
+
+**bandit** — SAST: skanuje AST w poszukiwaniu typowych błędów bezpieczeństwa (hardcoded passwords, SQL injection, insecure deserialization). Uruchamiany w CI.
+
+**pip-audit** — sprawdza zainstalowane pakiety pod kątem znanych CVE (baza OSV). Uruchamiany w CI.
+
+**pytest + django** — testy z `pytest-django`. Fixtures w `conftest.py`. Coverage minimum 70%.
+
+**factory-boy** — fabryki testowych obiektów Django zamiast ręcznego tworzenia fixtures. Integracja z Faker.
+
+**pre-commit** — git hooks: ruff przed każdym commitem, blokuje push z nieformatowanym kodem. Konfiguracja w `.pre-commit-config.yaml`.
+
+---
+
+## Struktura projektu
+
+```
+.
+├── apps/
+│   ├── core/                   # shared utilities, middleware, base models
+│   │   ├── utils.py            # generate_unique_slug, sanitize_html
+│   │   ├── validators.py       # validate_file_extension (MIME + magic bytes)
+│   │   ├── middleware.py       # RequestContextMiddleware (request_id)
+│   │   └── exceptions.py
+│   └── users/                  # custom user model + CRUD API
+├── config/
+│   ├── settings/
+│   │   ├── base.py             # wspólne: apps, middleware, DRF, CSP, structlog, LOGGING
+│   │   ├── development.py      # debug toolbar, CORS allow all, SQLite-like dev settings
+│   │   ├── production.py       # security headers, Sentry, Prometheus port
+│   │   └── testing.py          # SQLite :memory:, fast hashers
+│   ├── nginx/
+│   │   ├── local.conf.template     # HTTP, proxy do runserver
+│   │   └── default.conf.template   # HTTPS + Let's Encrypt
+│   ├── prometheus/
+│   │   ├── prometheus.yml      # scrape config (web:9100)
+│   │   └── alerts.yml          # reguły alertów (500 errors, slow responses)
+│   ├── grafana/
+│   │   └── provisioning/
+│   │       ├── datasources/    # auto-konfiguracja Prometheusa jako datasource
+│   │       └── dashboards/     # lokalizacja plików .json z dashboardami
+│   ├── uwsgi/
+│   │   └── uwsgi.ini
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── requirements/
+│   ├── base.txt / base.lock         # produkcja
+│   ├── development.txt / dev.lock   # lokalne dev
+│   ├── production.txt / prod.lock   # + uWSGI
+│   └── testing.txt / test.lock      # + pytest, mypy, bandit
+├── scripts/
+│   └── wait-for-it.sh
+├── docker-compose.local.yml    # dev: db + web (runserver) + nginx
+├── docker-compose.prod.yml     # prod: db + web (uWSGI) + nginx + certbot + prometheus + grafana
+├── docker-compose.test.yml     # CI: pytest w kontenerze
+├── Dockerfile
+├── Makefile
+├── pyproject.toml              # ruff + pytest + coverage + mypy config
+└── conftest.py
+```
+
+---
+
+## Quick Start
+
+### Lokalnie z Dockerem
+
+```bash
+cp .env.example .env
+# uzupełnij SECRET_KEY, DB_NAME, DB_USER, DB_PASSWORD
+
+make docker-build
+make docker-up       # http://localhost
+make docker-logs
+make docker-down
+```
+
+### Lokalnie bez Dockera
+
+```bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+make install         # uv pip install -r requirements/development.lock + pre-commit
+make migrate
+make run             # http://localhost:8000
+```
+
+---
+
+## Environment Variables
+
+Skopiuj `.env.example` i uzupełnij:
+
+```env
+SECRET_KEY=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+DB_HOST=localhost
+DB_PORT=5432
+DJANGO_SETTINGS_MODULE=config.settings.development
+
+# Produkcja
+ALLOWED_HOSTS=
+CORS_ALLOWED_ORIGINS=
+CSRF_TRUSTED_ORIGINS=
+SENTRY_DSN=
+APP_VERSION=0.1.0
+GRAFANA_ADMIN_PASSWORD=
+```
+
+---
+
+## Settings
+
+| Plik             | Kiedy używany                                         |
+|------------------|-------------------------------------------------------|
+| `base.py`        | wspólny — apps, middleware, DRF, CSP, structlog       |
+| `development.py` | lokalnie — debug toolbar, CORS allow all              |
+| `production.py`  | produkcja — security headers, Sentry, Prometheus port |
+| `testing.py`     | testy — SQLite :memory:, szybkie hashery              |
+
+---
+
+## Makefile
+
+### Development
+
+```bash
+make lock             # regeneruj .lock przez uv pip compile (Linux/py3.12)
+make install          # uv pip install + pre-commit
+
+make run              # runserver
+make migrate          # makemigrations + migrate
+make test             # pytest + coverage
+make test-fast        # pytest -x -q
+make lint             # ruff check + format check
+make lint-fix         # ruff autofix
+make security         # bandit + pip-audit
+make ci               # lint + test + security
+make shell            # shell_plus
+```
+
+### Docker lokalny
+
+```bash
+make docker-build              # zbuduj image
+make docker-up                 # uruchom stack (db + web + nginx)
+make docker-down
+make docker-logs
+make docker-migrate            # makemigrations + migrate w kontenerze
+make docker-migrate-check      # sprawdź czy migracje są aktualne
+make docker-collectstatic
+make docker-createsuperuser
+make docker-shell              # shell_plus w kontenerze
+make docker-test               # pytest w kontenerze
+make docker-clean              # down -v + docker system prune
+```
+
+### Produkcja
+
+```bash
+make prod-build                # zbuduj image (uv + lock files)
+make prod-up                   # uruchom cały stack
+make prod-migrate              # migracje
+make prod-collectstatic        # pliki statyczne
+make prod-createsuperuser      # konto admina
+make prod-ssl DOMAIN=example.com EMAIL=admin@example.com  # certyfikat SSL
+make prod-cron-install         # autoodnowienie certyfikatu (cron co 12h, wpisuje się do crontab)
+make prod-logs                 # sprawdź logi
+make prod-deploy               # kolejne aktualizacje: build + up + migrate + collectstatic
+make prod-restart              # restart tylko kontenera web
+make prod-ssl-renew            # ręczne wymuszenie odnowienia certyfikatu
+make prod-cron-remove          # usuń autoodnowienie z crontab
+make prod-shell                # manage.py shell
+make prod-down
+```
+
+---
+
+## Deploy (produkcja)
+
+### Wymagania na serwerze
+
+```bash
+# docker + docker compose v2
+curl -fsSL https://get.docker.com | sh
+
+# uv (do generowania lock files gdy requirements się zmienią)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### Pierwsze wdrożenie
+
+```bash
+git clone <repo> && cd <repo>
+
+cp .env.example .env
+nano .env                  # uzupełnij SECRET_KEY, DB_*, ALLOWED_HOSTS, GRAFANA_ADMIN_PASSWORD ...
+
+make prod-build            # zbuduj image (pobiera uv, instaluje z lock files)
+make prod-up               # uruchom: db, web, nginx, certbot, prometheus, grafana
+make prod-migrate
+make prod-collectstatic
+make prod-createsuperuser
+
+# certyfikat SSL — domena musi już wskazywać na serwer (A record w DNS)
+make prod-ssl DOMAIN=example.com EMAIL=admin@example.com
+
+# autoodnowienie — wpisuje zadanie do crontab hosta, uruchamia certbot co 12h
+# certbot pomija odnowienie jeśli certyfikat ma >30 dni ważności, więc jest bezpieczne
+make prod-cron-install
+
+make prod-logs             # sprawdź czy wszystko działa
+```
+
+### Kolejne aktualizacje
+
+```bash
+git pull
+make prod-deploy           # build web + up + migrate + collectstatic jedną komendą
+```
+
+---
+
+## Monitoring (Prometheus + Grafana)
+
+Po `make prod-up` dostępne przez SSH tunnel:
+
+```bash
+# Na serwerze:
+ssh -L 9090:localhost:9090 -L 3000:localhost:3000 user@your-server.com
+
+# Lokalnie:
+# Prometheus UI  →  http://localhost:9090
+# Grafana        →  http://localhost:3000   (admin / $GRAFANA_ADMIN_PASSWORD)
+```
+
+Porty `9090` i `3000` **nie są wystawione publicznie** — bindują tylko do `127.0.0.1` na serwerze.
+
+Port `9100` (metryki Django) nie jest wystawiony w ogóle poza siecią Docker — dostępny tylko dla kontenera Prometheus.
+
+### Architektura monitoringu
+
+```
+internet ──► nginx:443 ──► web:8000 (uWSGI)
+                               │ :9100/metrics (tylko sieć Docker)
+                               ▼
+                          prometheus:9090 ──scrape co 15s
+                               │
+                               ▼
+                          grafana:3000 ──── dashboardy
+```
+
+### Gotowe dashboardy
+
+Importuj przez Grafana UI (Dashboards → Import → wpisz ID):
+
+| Dashboard | ID |
+|---|---|
+| Django (requests, errors, latency) | `17658` |
+| PostgreSQL | `9628` |
+| Node Exporter (CPU/RAM serwera) | `1860` |
+
+### Alerty
+
+Reguły w `config/prometheus/alerts.yml`:
+
+| Alert | Warunek |
+|---|---|
+| `HighErrorRate` | >5% odpowiedzi 500 przez 2 minuty |
+| `SlowResponses` | p95 latency >2s przez 5 minut |
+| `DatabaseQuerySlow` | p95 czasu SQL >500ms przez 5 minut |
+| `AppDown` | Django nie odpowiada na scrape |
+
+Alerty są widoczne w Prometheus UI (`/alerts`). Żeby dostawać powiadomienia (Slack, email, PagerDuty) — dodaj Alertmanager do `docker-compose.prod.yml` i uzupełnij `alertmanagers` w `config/prometheus/prometheus.yml`.
+
+---
+
+## Tests
+
+```bash
+make test           # lokalnie
+make docker-test    # w kontenerze (docker-compose.test.yml)
+```
+
+Coverage minimum: **70%** (`pyproject.toml`).
