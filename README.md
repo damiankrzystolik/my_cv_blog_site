@@ -157,7 +157,7 @@ Production-ready Django project template. Clone, configure `.env`, deploy.
 ### Lokalnie z Dockerem
 
 ```bash
-cp .env.example .env
+cp .env .env
 # uzupełnij SECRET_KEY, DB_NAME, DB_USER, DB_PASSWORD
 
 make docker-build
@@ -285,7 +285,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 git clone <repo> && cd <repo>
 
-cp .env.example .env
+cp .env .env
 nano .env                  # uzupełnij SECRET_KEY, DB_*, ALLOWED_HOSTS, GRAFANA_ADMIN_PASSWORD ...
 
 make prod-build            # zbuduj image (pobiera uv, instaluje z lock files)
