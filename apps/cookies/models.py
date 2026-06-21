@@ -86,8 +86,8 @@ class CookieConsent(models.Model):
         verbose_name_plural = "Zgody na ciasteczka"
         ordering = ["-consent_given_at"]
         indexes = [
-            models.Index(fields=["is_valid"]),
-            models.Index(fields=["expires_at"]),
+            models.Index(fields=["is_valid"], name="cookies_coo_is_vali_idx"),
+            models.Index(fields=["expires_at"], name="cookies_coo_expires_idx"),
         ]
 
     def __str__(self):
