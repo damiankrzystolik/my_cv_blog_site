@@ -1,5 +1,6 @@
-from cookies.models import Cookie, CookieGroup
 from django.core.management.base import BaseCommand
+
+from apps.cookies.models import Cookie, CookieGroup
 
 
 class Command(BaseCommand):
