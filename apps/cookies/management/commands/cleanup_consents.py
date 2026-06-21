@@ -1,7 +1,8 @@
-from cookies import conf
-from cookies.models import CookieConsent
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
+from apps.cookies import conf
+from apps.cookies.models import CookieConsent
 
 
 class Command(BaseCommand):
