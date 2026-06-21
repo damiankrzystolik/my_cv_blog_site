@@ -25,7 +25,7 @@ media/
 
 # --- Env / secrets ---
 .env
-!.env
+
 
 # --- Tests / coverage ---
 .pytest_cache/

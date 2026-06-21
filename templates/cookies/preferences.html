@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Preferencje ciasteczek{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'cookies/css/cookies.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="preferences-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="mb-0">Preferencje ciasteczek</h1>
+                </div>
+                <div class="card-body">
+                    {% if current_consent %}
+                        <div class="alert alert-info">
+                            <strong>Status:</strong> Twoje preferencje są aktywne od {{ current_consent.consent_given_at|date:"d.m.Y H:i" }}
+                            <br>
+                            <strong>Wygasa:</strong> {{ current_consent.expires_at|date:"d.m.Y" }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="preferencesForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="save_preferences">
+
+                        {% for group in groups %}
+                        <div class="cookie-group card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title">{{ group.display_name }}</h5>
+                                        <p class="card-text text-muted">{{ group.description }}</p>
+                                        {% if group.is_required %}
+                                            <small class="text-info">
+                                                <em>Te ciasteczka są niezbędne do działania strony i nie można ich wyłączyć.</em>
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="selected_groups"
+                                               value="{{ group.name }}"
+                                               id="switch_{{ group.name }}"
+                                               {% if group.is_required %}checked disabled{% endif %}
+                                               {% if group.name in accepted_groups %}checked{% endif %}>
+                                        <label class="form-check-label" for="switch_{{ group.name }}"></label>
+                                    </div>
+                                </div>
+
+                                {% if group.cookie_set.exists %}
+                                <div class="cookie-list">
+                                    <h6>Ciasteczka w tej kategorii:</h6>
+                                    {% for cookie in group.cookie_set.all %}
+                                    <div class="cookie-item border rounded p-2 mb-2 bg-light">
+                                        <div class="fw-bold">{{ cookie.name }}</div>
+                                        <div class="text-muted small">{{ cookie.purpose }}</div>
+                                        <small class="text-secondary">
+                                            Wygasa: {{ cookie.expiry }} | Dostawca: {{ cookie.provider|default:"Ta strona" }}
+                                        </small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                Zapisz preferencje
+                            </button>
+                            <a href="{% url 'cookies:policy' %}" class="btn btn-outline-secondary">
+                                Polityka ciasteczek
+                            </a>
+                            {% if current_consent %}
+                                <a href="{% url 'cookies:withdraw' %}" class="btn btn-outline-danger"
+                                   data-confirm="Czy na pewno chcesz wycofać zgodę na wszystkie ciasteczka?">
+                                    Wycofaj zgodę
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'cookies/js/cookies.js' %}"></script>
+{% endblock %}

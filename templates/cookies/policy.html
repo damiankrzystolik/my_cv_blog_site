@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Polityka ciasteczek{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <article class="policy-content">
+                <header class="mb-5">
+                    <h1 class="display-5 fw-bold text-primary mb-3">Polityka ciasteczek</h1>
+                    <p class="lead text-muted">Dowiedz się, jak używamy ciasteczek na naszej stronie i jak możesz zarządzać swoimi preferencjami.</p>
+                </header>
+
+                <section class="mb-5">
+                    <h2 class="h3 fw-bold mb-3">1. Czym są ciasteczka?</h2>
+                    <div class="content-box p-4 bg-light rounded">
+                        <p class="mb-2">Ciasteczka (cookies) to małe pliki tekstowe, które są zapisywane na Twoim urządzeniu podczas odwiedzania naszej strony internetowej.</p>
+                        <p class="mb-0"><strong>Służą do:</strong> zapamiętywania Twoich preferencji, analizy ruchu na stronie oraz zapewnienia prawidłowego funkcjonowania serwisu.</p>
+                    </div>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h3 fw-bold mb-4">2. Rodzaje używanych ciasteczek</h2>
+
+                    {% for group in groups %}
+                    <div class="cookie-category mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if group.is_required %}
+                                <span class="badge bg-danger me-2">WYMAGANE</span>
+                            {% else %}
+                                <span class="badge bg-info me-2">OPCJONALNE</span>
+                            {% endif %}
+                            <h3 class="h5 mb-0 fw-semibold">{{ group.display_name }}</h3>
+                        </div>
+
+                        <div class="ps-3 border-start border-3 border-primary">
+                            <p class="text-muted mb-3">{{ group.description }}</p>
+
+                            {% if group.cookie_set.exists %}
+                            <div class="cookies-list">
+                                {% for cookie in group.cookie_set.all %}
+                                <div class="cookie-item p-3 mb-2 bg-white rounded border">
+                                    <div class="row align-items-start">
+                                        <div class="col-md-3">
+                                            <h6 class="fw-bold text-primary mb-1">{{ cookie.name }}</h6>
+                                            <small class="text-muted">{{ cookie.provider|default:"Ta strona" }}</small>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <p class="mb-1">{{ cookie.purpose|truncatechars:150 }}</p>
+                                            {% if cookie.purpose|length > 150 %}
+                                                <a href="#" class="small text-primary" data-bs-toggle="collapse" data-bs-target="#cookie-{{ cookie.id }}" aria-expanded="false">
+                                                    Czytaj więcej...
+                                                </a>
+                                                <div class="collapse mt-2" id="cookie-{{ cookie.id }}">
+                                                    <p class="small text-muted">{{ cookie.purpose }}</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <span class="badge bg-secondary">{{ cookie.expiry }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h3 fw-bold mb-3">3. Zarządzanie ciasteczkami</h2>
+                    <div class="content-box p-4 bg-light rounded">
+                        <p class="mb-3">Masz pełną kontrolę nad używanymi ciasteczkami:</p>
+                        <ul class="mb-0">
+                            <li class="mb-2">Możesz zaakceptować wszystkie ciasteczka.</li>
+                            <li class="mb-2">Możesz odrzucić ciasteczka nieobowiązkowe (zostaną tylko niezbędne).</li>
+                            <li class="mb-2">Możesz dostosować swoje preferencje indywidualnie dla każdej kategorii.</li>
+                            <li class="mb-0">Możesz zmienić albo wycofać swoje preferencje w każdej chwili.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                {% comment %}
+                PLAN.md A1/A2: poprawiona podstawa prawna. Cookies analityczne i
+                marketingowe wymagają ZGODY (art. 6 ust. 1 lit. a RODO w zw. z
+                art. 398 ustawy Prawo komunikacji elektronicznej z 12.07.2024,
+                implementującej dyrektywę ePrivacy 2002/58/WE art. 5 ust. 3).
+                "Uzasadniony interes" (art. 6 ust. 1 lit. f RODO) NIE jest
+                dopuszczalną podstawą dla zapisu/odczytu informacji na
+                urządzeniu użytkownika poza przypadkami niezbędnymi do
+                świadczenia usługi - ePrivacy/PKE ma tu charakter lex specialis.
+                {% endcomment %}
+                <section class="mb-5">
+                    <h2 class="h3 fw-bold mb-3">4. Podstawy prawne</h2>
+                    <div class="content-box p-4 bg-light rounded">
+                        <p class="mb-2">Przetwarzanie danych za pomocą ciasteczek odbywa się na podstawie:</p>
+                        <ul class="mb-2">
+                            <li>
+                                <strong>Art. 398 ustawy z dnia 12 lipca 2024 r. – Prawo komunikacji elektronicznej</strong>
+                                oraz art. 6 ust. 1 lit. a RODO (zgoda) – ciasteczka analityczne i marketingowe,
+                                wymagające Twojej zgody przed zapisem na urządzeniu.
+                            </li>
+                            <li>
+                                <strong>Art. 6 ust. 1 lit. f RODO</strong> (uzasadniony interes administratora) oraz
+                                art. 398 ust. 2 PKE – wyłącznie ciasteczka niezbędne do prawidłowego świadczenia
+                                usługi (np. utrzymanie sesji, bezpieczeństwo formularzy), które nie wymagają zgody.
+                            </li>
+                        </ul>
+                        <p class="mb-0">
+                            Zgodę możesz wycofać w każdej chwili w panelu preferencji - jest to równie łatwe,
+                            jak jej udzielenie (art. 7 ust. 3 RODO).
+                        </p>
+                    </div>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h3 fw-bold mb-3">5. Twoje prawa</h2>
+                    <div class="content-box p-4 bg-light rounded">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-semibold">Masz prawo do:</h6>
+                                <ul class="list-unstyled small">
+                                    <li>Wycofania zgody w każdym momencie</li>
+                                    <li>Dostępu do swoich danych</li>
+                                    <li>Sprostowania danych</li>
+                                    <li>Usunięcia danych</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-semibold">Jak skorzystać:</h6>
+                                <ul class="list-unstyled small">
+                                    {% if contact_email %}
+                                    <li>Napisz do nas: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></li>
+                                    {% endif %}
+                                    <li>Użyj panelu preferencji</li>
+                                    <li>Skonfiguruj ustawienia swojej przeglądarki</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="text-center py-4 border-top">
+                    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center align-items-center">
+                        <a href="{% url 'cookies:preferences' %}" class="btn btn-primary btn-lg">
+                            Zarządzaj preferencjami
+                        </a>
+                        <a href="/static" class="btn btn-outline-secondary">
+                            Strona główna
+                        </a>
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">
+                        Ostatnia aktualizacja: {% now "d.m.Y" %}
+                        {% if contact_email %} | <a href="mailto:{{ contact_email }}" class="text-decoration-none">Kontakt w sprawie ciasteczek</a>{% endif %}
+                    </p>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+{% endblock %}
