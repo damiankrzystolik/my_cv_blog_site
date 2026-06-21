@@ -76,11 +76,13 @@ docker-logs:
 docker-migrate:
 	docker compose -f docker-compose.local.yml exec web python manage.py makemigrations
 	docker compose -f docker-compose.local.yml exec web python manage.py migrate
+	docker compose -f docker-compose.local.yml exec web python manage.py showmigrations
 
 docker-migrate-check:
+	docker compose -f docker-compose.local.yml exec web python manage.py showmigrations
 	docker compose -f docker-compose.local.yml exec web python manage.py makemigrations --check --dry-run
 	docker compose -f docker-compose.local.yml exec web python manage.py migrate --check
-	docker compose -f docker-compose.local.yml exec web python manage.py showmigrations
+
 
 docker-collectstatic:
 	docker compose -f docker-compose.local.yml exec web python manage.py collectstatic --noinput
