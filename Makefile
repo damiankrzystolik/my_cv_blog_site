@@ -80,6 +80,7 @@ docker-migrate:
 docker-migrate-check:
 	docker compose -f docker-compose.local.yml exec web python manage.py makemigrations --check --dry-run
 	docker compose -f docker-compose.local.yml exec web python manage.py migrate --check
+	docker compose -f docker-compose.local.yml exec web python manage.py showmigrations
 
 docker-collectstatic:
 	docker compose -f docker-compose.local.yml exec web python manage.py collectstatic --noinput
