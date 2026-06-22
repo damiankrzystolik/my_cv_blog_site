@@ -1,0 +1,20 @@
+{% load static cookie_tags %}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Moja strona{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'cookies/css/cookies.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% block content %}
+    <h1>Witaj na mojej stronie</h1>
+    {% endblock %}
+
+    {% cookie_consent_banner %}
+
+    <script src="{% static 'cookies/js/cookies.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
