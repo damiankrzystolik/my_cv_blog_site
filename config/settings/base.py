@@ -46,6 +46,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
     "apps.core.middleware.RequestContextMiddleware",
+    "apps.cookies.middleware.CookieConsentMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
