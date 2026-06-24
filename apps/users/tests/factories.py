@@ -1,8 +1,9 @@
 import factory
 from faker import Faker
+
 from apps.users.models import User
 
-fake = Faker('pl_PL')
+fake = Faker("pl_PL")
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -17,6 +18,6 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def password(self, create, extracted, **kwargs):
-        self.set_password(extracted or 'testpass123')
+        self.set_password(extracted or "testpass123")
         if create:
             self.save()

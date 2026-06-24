@@ -1,4 +1,6 @@
 import pytest
+from django.db.utils import IntegrityError
+
 from apps.users.tests.factories import UserFactory
 
 
@@ -9,6 +11,6 @@ class TestUserModel:
         assert str(user) == user.email
 
     def test_email_is_unique(self):
-        UserFactory(email='unique@example.com')
-        with pytest.raises(Exception):
-            UserFactory(email='unique@example.com')
+        UserFactory(email="unique@example.com")
+        with pytest.raises(IntegrityError):
+            UserFactory(email="unique@example.com")
