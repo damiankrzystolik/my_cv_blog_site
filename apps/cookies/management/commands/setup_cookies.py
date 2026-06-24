@@ -14,8 +14,7 @@ class Command(BaseCommand):
             defaults={
                 "display_name": "Obowiązkowe",
                 "description": (
-                    "Te ciasteczka są niezbędne do prawidłowego działania strony internetowej. "
-                    "Nie można ich wyłączyć."
+                    "Te ciasteczka są niezbędne do prawidłowego działania strony internetowej. Nie można ich wyłączyć."
                 ),
                 "is_required": True,
             },
