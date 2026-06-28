@@ -4,16 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Moja strona{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'cookies/css/cookies.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     {% block content %}
-    <h1>Witaj na mojej stronie</h1>
     {% endblock %}
 
-    {% cookie_consent_banner %}
 
+    {% cookie_consent_banner %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'cookies/js/cookies.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>

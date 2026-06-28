@@ -19,15 +19,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import TemplateView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("apps.users.urls")),
     path("cookies/", include("apps.cookies.urls")),
-    path("", TemplateView.as_view(template_name="base.html"), name="home"),
+    # path("", TemplateView.as_view(template_name="base.html"), name="home"),
     path("", include("django_prometheus.urls")),
     path("health/", include("apps.core.urls")),
+    path("", include("apps.cv.urls")),
 ]
 
 if settings.DEBUG:
