@@ -1,6 +1,6 @@
-# Django Boilerplate
+# Strona Portfolio - CV + Blog
 
-Production-ready Django project template. Clone, configure `.env`, deploy.
+Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o bloga. Zbudowana na bazie produkcyjnego szablonu Django (Docker, monitoring, CI, bezpieczeństwo) opisanego poniżej.
 
 ---
 
@@ -112,7 +112,13 @@ Production-ready Django project template. Clone, configure `.env`, deploy.
 │   │   ├── validators.py       # validate_file_extension (MIME + magic bytes)
 │   │   ├── middleware.py       # RequestContextMiddleware (request_id)
 │   │   └── exceptions.py
-│   └── users/                  # custom user model + CRUD API
+│   ├── users/                  # custom user model + CRUD API
+│   ├── cookies/                # cookie consent management (banner, preferences, policy)
+│   │   ├── models.py           # CookieConsent
+│   │   ├── middleware.py       # CookieConsentMiddleware
+│   │   ├── management/commands/ # setup_cookies, cleanup_consents
+│   │   └── README.md
+│   └── cv/                     # static CV/homepage app (served at "/")
 ├── config/
 │   ├── settings/
 │   │   ├── base.py             # wspólne: apps, middleware, DRF, CSP, structlog, LOGGING

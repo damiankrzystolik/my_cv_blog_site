@@ -1,6 +1,6 @@
 [project]
-name = "django-template"
-version = "1.0.1"
+name = "my-cv-blog-site"
+version = "0.2.0"
 dependencies = [
     "django>=5.2.15",
     "ruff>=0.15.20",
