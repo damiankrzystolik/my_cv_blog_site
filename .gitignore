@@ -57,3 +57,7 @@ Thumbs.db
 notatki/
 .claude/
 requirements/.prod_tmp
+
+# cknpozytywka
+public_html
+mysql8.sql

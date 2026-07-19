@@ -1,4 +1,32 @@
 services:
+  wordpress_db:
+    image: mariadb:11
+    restart: always
+    volumes:
+      - wordpress_db_data:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${WORDPRESS_DB_NAME}
+      - MYSQL_USER=${WORDPRESS_DB_USER}
+      - MYSQL_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${WORDPRESS_DB_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u root -p${WORDPRESS_DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  wordpress:
+    image: wordpress:php8.3-apache
+    restart: always
+    volumes:
+      - wordpress_data:/var/www/html
+    environment:
+      - WORDPRESS_DB_HOST=wordpress_db
+      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
+      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
+    depends_on:
+      wordpress_db:
+        condition: service_healthy
   db:
     image: postgres:17.4-alpine
     restart: always
@@ -58,3 +86,5 @@ services:
 
 volumes:
   postgres_data:
+  wordpress_data:
+  wordpress_db_data:
