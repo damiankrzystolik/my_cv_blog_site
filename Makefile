@@ -70,6 +70,12 @@ docker-up:
 docker-down:
 	docker compose -f docker-compose.local.yml down
 
+docker-stop:
+	docker compose -f docker-compose.local.yml stop
+
+docker-start:
+	docker compose -f docker-compose.local.yml start
+
 docker-logs:
 	docker compose -f docker-compose.local.yml logs -f
 
