@@ -28,6 +28,7 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("health/", include("apps.core.urls")),
     path("", include("apps.cv.urls")),
+   path("blog/", include("apps.blog.urls")),
 ]
 
 if settings.DEBUG:
