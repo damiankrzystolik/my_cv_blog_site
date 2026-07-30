@@ -118,7 +118,8 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 │   │   ├── middleware.py       # CookieConsentMiddleware
 │   │   ├── management/commands/ # setup_cookies, cleanup_consents
 │   │   └── README.md
-│   └── cv/                     # static CV/homepage app (served at "/")
+│   ├── cv/                     # static CV/homepage app (served at "/")
+│   └── blog/                   # blog app scaffold, served at "/blog/" (in progress)
 ├── config/
 │   ├── settings/
 │   │   ├── base.py             # wspólne: apps, middleware, DRF, CSP, structlog, LOGGING

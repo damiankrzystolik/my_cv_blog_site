@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-30
+### Fixed
+- Baner zgody na ciasteczka nie reagował na przyciski "Akceptuj wszystkie" / "Tylko niezbędne" przy pierwszej wizycie na świeżym środowisku (np. zaraz po `docker up`, przed zalogowaniem do panelu admina) — Django nie ustawiał jeszcze ciasteczka `csrftoken`, więc `cookies.js` wysyłał POST bez poprawnego tokenu i żądanie odrzucał `CsrfViewMiddleware`. Dodano `{% csrf_token %}` do `templates/cookies/banner.html`, żeby ciasteczko CSRF ustawiało się już przy pierwszym renderze dowolnej strony (baner jest częścią `base.html`)
+
+## [0.3.0] - 2026-07-30
+### Added
+- `apps/blog`: początkowy szkielet aplikacji blogowej — widok `blog` renderujący placeholder `templates/blog/blog.html`, podpięty pod `/blog/` (dalszy rozwój w kolejnych commitach)
+- `make docker-stop` / `make docker-start` — zatrzymywanie/wznawianie kontenerów bez ich usuwania (w odróżnieniu od `docker-down`/`docker-up`)
+
+### Changed
+- Zaktualizowano treść bio, listę umiejętności i sekcję projektów na stronie CV (`templates/cv/cv.html`)
+
 ## [0.2.0] - 2026-07-18
 ### Added
 - `apps/cv`: static CV/homepage app — renders `templates/cv/cv.html` at the site root (`/`), replacing the placeholder `TemplateView`
