@@ -106,6 +106,8 @@ docker-clean:
 	docker compose -f docker-compose.local.yml down -v --remove-orphans
 	docker system prune -f
 
+docker-check-deploy:
+	docker compose -f docker-compose.local.yml exec web python manage.py check  --deploy
 # ============================================================
 # Produkcja — wdrożenie krok po kroku
 #
