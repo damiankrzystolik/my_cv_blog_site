@@ -3,6 +3,7 @@
 asgiref==3.11.1
     # via
     #   django
+    #   django-axes
     #   django-cors-headers
 ast-serialize==0.5.0
     # via mypy
@@ -33,6 +34,7 @@ defusedxml==0.7.1
 django==5.2.14
     # via
     #   -r requirements/base.txt
+    #   django-axes
     #   django-cors-headers
     #   django-csp
     #   django-prometheus
@@ -41,6 +43,8 @@ django==5.2.14
     #   djangorestframework
     #   djangorestframework-simplejwt
     #   drf-spectacular
+django-axes==8.3.1
+    # via -r requirements/base.txt
 django-cors-headers==4.9.0
     # via -r requirements/base.txt
 django-csp==4.0

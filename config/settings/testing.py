@@ -11,3 +11,5 @@ DATABASES = {
         "NAME": ":memory:",
     }
 }
+
+AXES_ENABLED = False

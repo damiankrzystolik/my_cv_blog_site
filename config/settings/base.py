@@ -22,6 +22,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "corsheaders",
     "django_prometheus",
+    "axes",
 ]
 
 LOCAL_APPS = [
@@ -36,6 +37,11 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 AUTH_USER_MODEL = "users.User"
 
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -49,6 +55,7 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
     "apps.core.middleware.RequestContextMiddleware",
     "apps.cookies.middleware.CookieConsentMiddleware",
+    "axes.middleware.AxesMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
@@ -88,6 +95,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
 
 LANGUAGE_CODE = "pl-pl"
 TIME_ZONE = "Europe/Warsaw"

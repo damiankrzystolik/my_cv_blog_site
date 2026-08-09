@@ -60,3 +60,7 @@ requirements/.prod_tmp
 
 # ckn pozytywka
 public_html
+
+# private
+notatki
+ln_and_blog_articles
