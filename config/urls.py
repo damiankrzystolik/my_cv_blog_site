@@ -19,6 +19,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django_otp.admin import OTPAdminSite
+
+admin.site.__class__ = OTPAdminSite
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -28,7 +31,7 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("health/", include("apps.core.urls")),
     path("", include("apps.cv.urls")),
-   path("blog/", include("apps.blog.urls")),
+    path("blog/", include("apps.blog.urls")),
 ]
 
 if settings.DEBUG:

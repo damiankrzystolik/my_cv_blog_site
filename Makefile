@@ -97,7 +97,7 @@ docker-createsuperuser:
 	docker compose -f docker-compose.local.yml exec web python manage.py createsuperuser
 
 docker-shell:
-	docker compose -f docker-compose.local.yml exec web python manage.py shell_plus
+	docker compose -f docker-compose.local.yml exec web python manage.py shell
 
 docker-test:
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit

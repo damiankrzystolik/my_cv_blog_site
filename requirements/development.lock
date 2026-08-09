@@ -29,6 +29,7 @@ django==5.2.14
     #   django-csp
     #   django-debug-toolbar
     #   django-extensions
+    #   django-otp
     #   django-prometheus
     #   djangorestframework
     #   djangorestframework-simplejwt
@@ -43,6 +44,8 @@ django-debug-toolbar==6.3.0
     # via -r requirements/development.txt
 django-extensions==4.1
     # via -r requirements/development.txt
+django-otp==1.7.0
+    # via -r requirements/base.txt
 django-prometheus==2.4.1
     # via -r requirements/base.txt
 djangorestframework==3.17.1

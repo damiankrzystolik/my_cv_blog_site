@@ -12,3 +12,4 @@ structlog>=24.0.0
 sentry-sdk>=2.0.0
 python-magic>=0.4.27
 django-axes>=6.0
+django-otp>=1.5.0
