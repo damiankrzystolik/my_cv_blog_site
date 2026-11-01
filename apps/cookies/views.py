@@ -2,6 +2,7 @@ import json
 import logging
 
 from django.contrib import messages
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -68,9 +69,13 @@ def handle_cookie_consent(request):
         consent.accepted_groups.set(required_groups)
         log_action = "reject_all"
     elif action == "save_preferences":
-        selected_group_objs = CookieGroup.objects.filter(name__in=list(selected_groups), is_active=True)
         # Obowiązkowe grupy zawsze dołączone, niezależnie od tego, co przyszło z formularza.
-        consent.accepted_groups.set(selected_group_objs.union(required_groups))
+        consent.accepted_groups.set(
+            CookieGroup.objects.filter(
+                Q(name__in=list(selected_groups)) | Q(is_required=True),
+                is_active=True,
+            )
+        )
         log_action = "partial"
     else:
         return JsonResponse({"success": False, "error": "Nieznana akcja."}, status=400)
