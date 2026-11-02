@@ -52,6 +52,6 @@ sentry_sdk.init(
     ],
     traces_sample_rate=0.1,
     environment="production",
-    release=config("APP_VERSION", default="unknown"),
+    release=APP_VERSION,
     send_default_pii=False,
 )

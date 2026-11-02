@@ -1,9 +1,14 @@
+import tomllib
 from pathlib import Path
 
 import structlog
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Jedno źródło wersji: [project].version w pyproject.toml (aktualizowane przez /release-docs).
+with open(BASE_DIR / "pyproject.toml", "rb") as f:
+    APP_VERSION = tomllib.load(f)["project"]["version"]
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-only-change-in-prod")
 
@@ -139,7 +144,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "API",
-    "VERSION": "1.0.0",
+    "VERSION": APP_VERSION,
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
