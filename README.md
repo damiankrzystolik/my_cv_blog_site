@@ -16,6 +16,7 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 | Monitoring     | django-prometheus → Prometheus → Grafana           |
 | Error tracking | Sentry SDK                                         |
 | Bezpieczeństwo | django-csp, bleach, python-magic                   |
+| Admin          | django-axes (brute-force), django-otp (2FA TOTP)   |
 | Config         | python-decouple (`.env`)                           |
 | Serwer         | uWSGI + Nginx                                      |
 | SSL            | Let's Encrypt (certbot)                            |
@@ -50,6 +51,10 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 **bleach** — sanityzacja HTML na poziomie aplikacji: `sanitize_html()` w `apps/core/utils.py`. Używać wszędzie tam gdzie user-generated content trafia do bazy i z powrotem do HTML. django-csp chroni przed XSS w przeglądarce, bleach chroni przed XSS zanim dane trafią do bazy.
 
 **python-magic** — weryfikuje rzeczywisty MIME type pliku przez odczyt magic bytes, nie tylko rozszerzenie. Plik `evil.exe` z rozszerzeniem `.jpg` zostanie odrzucony. Używany w `validate_file_extension()` w `apps/core/validators.py`. Wymaga `libmagic1` w kontenerze (jest w Dockerfile).
+
+**django-axes** — blokuje logowanie po 5 nieudanych próbach dla pary użytkownik + IP, blokada znika po 1 godzinie (`AXES_*` w `base.py`). `AxesStandaloneBackend` stoi pierwszy w `AUTHENTICATION_BACKENDS`, więc blokada jest sprawdzana zanim `ModelBackend` w ogóle zweryfikuje hasło. W testach wyłączony (`AXES_ENABLED = False` w `testing.py`), żeby testy logowania nie wyzwalały blokady.
+
+**django-otp** — drugi składnik logowania do panelu admina. `admin.site` jest podmieniony na `OTPAdminSite` (`config/urls.py`): formularz logowania ma pole na kod, a dostęp wymaga `request.user.is_verified()` oprócz `is_staff`. Urządzenia: `TOTPDevice` (kody z aplikacji typu Google Authenticator / Aegis) i `StaticDevice` (jednorazowe kody zapasowe). Bez `django-two-factor-auth` nie ma ekranu rejestracji urządzenia — zakłada się je przez shell (patrz [Panel admina — 2FA](#panel-admina--2fa)).
 
 ### Logging
 
@@ -243,9 +248,14 @@ make shell            # shell_plus
 make docker-build              # zbuduj image
 make docker-up                 # uruchom stack (db + web + nginx)
 make docker-down
+make docker-stop               # zatrzymaj kontenery bez usuwania
+make docker-start              # wznów zatrzymane kontenery
 make docker-logs
 make docker-migrate            # makemigrations + migrate w kontenerze
-make docker-migrate-check      # sprawdź czy migracje są aktualne
+make docker-check-makemigrations  # czy brakuje plików migracji (--check --dry-run)
+make docker-check-migrate      # czy wszystkie migracje są zastosowane
+make docker-showmigrations     # lista migracji i ich stan
+make docker-check-deploy       # manage.py check --deploy
 make docker-collectstatic
 make docker-createsuperuser
 make docker-shell              # shell_plus w kontenerze
@@ -299,6 +309,7 @@ make prod-up               # uruchom: db, web, nginx, certbot, prometheus, grafa
 make prod-migrate
 make prod-collectstatic
 make prod-createsuperuser
+make prod-shell            # załóż urządzenie 2FA dla admina — patrz "Panel admina — 2FA"
 
 # certyfikat SSL — domena musi już wskazywać na serwer (A record w DNS)
 make prod-ssl DOMAIN=example.com EMAIL=admin@example.com
@@ -316,6 +327,33 @@ make prod-logs             # sprawdź czy wszystko działa
 git pull
 make prod-deploy           # build web + up + migrate + collectstatic jedną komendą
 ```
+
+---
+
+## Panel admina — 2FA
+
+Logowanie do `/admin/` wymaga hasła **i** kodu z aplikacji uwierzytelniającej. Superuser bez urządzenia OTP nie zaloguje się wcale — dotyczy to każdej nowej lub wyczyszczonej bazy (np. po `make docker-clean`).
+
+Urządzenie zakłada się w shellu (`make docker-shell` lokalnie, `make prod-shell` na serwerze):
+
+```python
+from django.contrib.auth import get_user_model
+from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
+from django_otp.plugins.otp_totp.models import TOTPDevice
+
+user = get_user_model().objects.get(email="admin@example.com")
+
+totp = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
+print(totp.config_url)  # otpauth://... → wklej/zeskanuj w aplikacji (Aegis, Google Authenticator)
+
+backup = StaticDevice.objects.create(user=user, name="backup")
+for _ in range(10):
+    print(StaticToken.objects.create(device=backup, token=StaticToken.random_token()).token)
+```
+
+Kody zapasowe zapisz poza serwerem — każdy działa jeden raz. Urządzenia są też widoczne i edytowalne w adminie (sekcje *OTP_TOTP* / *OTP_STATIC*).
+
+Zablokowany przez axes (5 błędnych logowań): poczekaj godzinę albo `manage.py axes_reset`.
 
 ---
 

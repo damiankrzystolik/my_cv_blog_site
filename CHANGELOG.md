@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-02
+### Added
+- Ochrona logowania do panelu admina przed brute-force (`django-axes`) — po 5 nieudanych próbach para użytkownik/IP jest blokowana na 1 godzinę. W ustawieniach testowych wyłączone (`AXES_ENABLED = False`)
+- Dwuskładnikowe logowanie do panelu admina (`django-otp`) — `admin.site` działa jako `OTPAdminSite`, formularz logowania wymaga kodu TOTP z aplikacji uwierzytelniającej; jednorazowe kody zapasowe (`StaticDevice`) na wypadek utraty telefonu. Urządzenia zakłada się przez `manage.py shell` (instrukcja w README)
+- `APP_VERSION` w `config/settings/base.py` czytane z `pyproject.toml` — jedno źródło numeru wersji dla Sentry (`release`) i schematu OpenAPI
+- `make docker-check-deploy` — `manage.py check --deploy` w kontenerze
+
+### Changed
+- `make docker-migrate-check` rozbity na `docker-check-makemigrations`, `docker-check-migrate` i `docker-showmigrations`; `docker-migrate` nie wypisuje już `showmigrations`
+- `make docker-shell` uruchamia `shell_plus`
+
+### Removed
+- Zmienna środowiskowa `APP_VERSION` (`.env`, `docker-compose.prod.yml`) — wersja pochodzi z `pyproject.toml`
+
+### Fixed
+- `make docker-test` nie budował obrazu — `docker-compose.test.yml` przekazywał `REQUIREMENTS: testing.txt`, przez co Dockerfile szukał nieistniejącego `testing.txt.lock`
+- pytest zawieszał się przy zbieraniu testów w kontenerze (przeszukiwał cały katalog projektu przez bind mount) i pomijał pliki `tests.py` — dodano `testpaths = ["apps"]` i `tests.py` do `python_files`; uruchamia się 40 testów zamiast 7
+- Zapis preferencji ciasteczek (`save_preferences`) kończył się błędem bazy na SQLite — `QuerySet.union()` z domyślnym `ORDER BY` zastąpiony jednym zapytaniem z `Q(...) | Q(...)`
+
 ## [0.3.1] - 2026-07-30
 ### Fixed
 - Baner zgody na ciasteczka nie reagował na przyciski "Akceptuj wszystkie" / "Tylko niezbędne" przy pierwszej wizycie na świeżym środowisku (np. zaraz po `docker up`, przed zalogowaniem do panelu admina) — Django nie ustawiał jeszcze ciasteczka `csrftoken`, więc `cookies.js` wysyłał POST bez poprawnego tokenu i żądanie odrzucał `CsrfViewMiddleware`. Dodano `{% csrf_token %}` do `templates/cookies/banner.html`, żeby ciasteczko CSRF ustawiało się już przy pierwszym renderze dowolnej strony (baner jest częścią `base.html`)
