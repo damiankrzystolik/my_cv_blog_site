@@ -57,6 +57,7 @@ Thumbs.db
 notatki/
 .claude/
 requirements/.prod_tmp
+CLAUDE.md
 
 # ckn pozytywka
 public_html
