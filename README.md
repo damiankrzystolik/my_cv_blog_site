@@ -207,6 +207,7 @@ ALLOWED_HOSTS=
 CORS_ALLOWED_ORIGINS=
 CSRF_TRUSTED_ORIGINS=
 SENTRY_DSN=
+ADMIN_URL=admin/         # ścieżka panelu admina (domyślnie admin/) — tylko redukcja szumu od botów, nie zabezpieczenie
 GRAFANA_ADMIN_PASSWORD=
 ```
 

@@ -100,10 +100,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# Ścieżka panelu admina z .env — nie zabezpieczenie (od tego są axes + OTP), tylko mniej botów w logach.
+# Normalizacja do postaci "sciezka/" niezależnie od tego, czy w .env jest "/sciezka", "sciezka/" czy "sciezka".
+ADMIN_URL = config("ADMIN_URL", default="admin/").strip("/") + "/"
 
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
