@@ -1,0 +1,31 @@
+{% extends "blog/base.html" %}
+{% load blog_tags %}
+
+{% block title %}Szukaj{% if query %}: {{ query }}{% endif %} — Blog{% endblock %}
+
+{% block blog_content %}
+<h1 class="mb-4"><i class="bi bi-search"></i> Szukaj we wpisach</h1>
+
+<form method="get" class="mb-4" role="search">
+    <div class="input-group">
+        {{ form.query }}
+        <button type="submit" class="btn btn-primary">Szukaj</button>
+    </div>
+    {% for error in form.query.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</form>
+
+{% if query %}
+    {% with total=results|length %}
+        <p class="lead">Fraza <strong>„{{ query }}”</strong>: {{ total }} {{ total|polish_pluralize:"wynik,wyniki,wyników" }}</p>
+    {% endwith %}
+    {% for post in results %}
+        {% include "blog/includes/post_card.html" %}
+    {% empty %}
+        <div class="alert alert-info" role="alert">Nic nie znaleziono. Spróbuj innego słowa.</div>
+    {% endfor %}
+{% else %}
+    <p class="text-muted">Szukam w tytułach, treści i tagach. Drobne literówki w tytule też znajdę.</p>
+{% endif %}
+{% endblock %}

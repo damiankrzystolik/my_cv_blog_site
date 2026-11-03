@@ -1,0 +1,54 @@
+{% extends "blog/base.html" %}
+{% load blog_tags %}
+
+{% block title %}{{ post.title }} — Blog{% endblock %}
+
+{% block blog_meta %}
+{% if post.excerpt %}<meta name="description" content="{{ post.excerpt }}">{% endif %}
+{% endblock %}
+
+{% block blog_content %}
+<article>
+    <h1 class="mb-2">{{ post.title }}</h1>
+    {% include "blog/includes/post_meta.html" %}
+
+    <div class="post-body mt-4">
+        {{ post.rendered_body }}
+    </div>
+</article>
+
+{% include "blog/includes/share.html" %}
+
+{% if similar_posts %}
+<section class="mt-5">
+    <h2 class="h4 mb-3">Podobne wpisy</h2>
+    <div class="list-group">
+        {% for similar in similar_posts %}
+            <a href="{{ similar.get_absolute_url }}" class="list-group-item list-group-item-action">{{ similar.title }}</a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="mt-5" id="comments">
+    {% with total=comments|length %}
+        <h2 class="h4 mb-3">{{ total }} {{ total|polish_pluralize:"komentarz,komentarze,komentarzy" }}</h2>
+    {% endwith %}
+
+    {% for comment in comments %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="text-muted small mb-2">
+                    <strong class="text-body">{{ comment.name }}</strong>
+                    <span class="ms-2">{{ comment.created_at|date:"j E Y, H:i" }}</span>
+                </p>
+                <div class="card-text">{{ comment.body|linebreaks }}</div>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">Jeszcze nikt nie skomentował. Możesz być pierwszy.</p>
+    {% endfor %}
+
+    {% include "blog/includes/comment_form.html" %}
+</section>
+{% endblock %}

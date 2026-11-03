@@ -20,3 +20,5 @@ DATABASES = {
 }
 
 AXES_ENABLED = False
+
+BLOG_COMMENT_NOTIFY_EMAILS = ["owner@example.com"]

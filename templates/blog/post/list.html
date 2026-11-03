@@ -1,0 +1,15 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{% if tag %}Tag: {{ tag.name }} — {% endif %}Blog{% endblock %}
+
+{% block blog_content %}
+<h1 class="mb-4">{% if tag %}Wpisy z tagiem <span class="badge text-bg-secondary">{{ tag.name }}</span>{% else %}Blog{% endif %}</h1>
+
+{% for post in posts %}
+    {% include "blog/includes/post_card.html" %}
+{% empty %}
+    <div class="alert alert-info" role="alert">Brak wpisów.</div>
+{% endfor %}
+
+{% include "blog/includes/pagination.html" with page=posts %}
+{% endblock %}

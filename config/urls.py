@@ -18,10 +18,15 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from django_otp.admin import OTPAdminSite
 
+from apps.blog.sitemaps import PostSitemap, TagSitemap
+
 admin.site.__class__ = OTPAdminSite
+
+sitemaps = {"posts": PostSitemap, "tags": TagSitemap}
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
@@ -32,6 +37,7 @@ urlpatterns = [
     path("health/", include("apps.core.urls")),
     path("", include("apps.cv.urls")),
     path("blog/", include("apps.blog.urls")),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'blog/css/blog.css' %}">
+<link rel="stylesheet" href="{% static 'blog/css/pygments.css' %}">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="{% url 'blog:post_feed' %}">
+{% block blog_meta %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav class="mb-4">
+        <a href="{% url 'cv:cv' %}" class="text-decoration-none"><i class="bi bi-person"></i> CV</a>
+        <span class="text-muted mx-2">/</span>
+        <a href="{% url 'blog:post_list' %}" class="text-decoration-none"><i class="bi bi-journal-text"></i> Blog</a>
+    </nav>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <main class="col-lg-8">
+            {% block blog_content %}{% endblock %}
+        </main>
+        <aside class="col-lg-4 mt-4 mt-lg-0">
+            {% include "blog/includes/sidebar.html" %}
+        </aside>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/blog.js' %}"></script>
+{% endblock %}
