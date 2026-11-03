@@ -111,7 +111,9 @@ ADMIN_URL = config("ADMIN_URL", default="admin/").strip("/") + "/"
 
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
-AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+# Lista zagnieżdżona = kombinacja (to konto Z TEGO IP). Płaska ["username", "ip_address"] blokowałaby
+# osobno po loginie LUB po IP — każdy znający login mógłby zablokować właściciela z dowolnego adresu.
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 
 LANGUAGE_CODE = "pl-pl"
 TIME_ZONE = "Europe/Warsaw"
