@@ -13,3 +13,7 @@ sentry-sdk>=2.0.0
 python-magic>=0.4.27
 django-axes>=6.0
 django-otp>=1.5.0
+django-taggit>=6.1.0
+Markdown>=3.8
+Pygments>=2.18
+Pillow>=11.0
