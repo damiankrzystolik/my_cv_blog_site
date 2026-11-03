@@ -52,7 +52,7 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 
 **python-magic** — weryfikuje rzeczywisty MIME type pliku przez odczyt magic bytes, nie tylko rozszerzenie. Plik `evil.exe` z rozszerzeniem `.jpg` zostanie odrzucony. Używany w `validate_file_extension()` w `apps/core/validators.py`. Wymaga `libmagic1` w kontenerze (jest w Dockerfile).
 
-**django-axes** — blokuje logowanie po 5 nieudanych próbach dla pary użytkownik + IP, blokada znika po 1 godzinie (`AXES_*` w `base.py`). `AxesStandaloneBackend` stoi pierwszy w `AUTHENTICATION_BACKENDS`, więc blokada jest sprawdzana zanim `ModelBackend` w ogóle zweryfikuje hasło. W testach wyłączony (`AXES_ENABLED = False` w `testing.py`), żeby testy logowania nie wyzwalały blokady.
+**django-axes** — blokuje logowanie po 5 nieudanych próbach dla pary użytkownik + IP, blokada znika po 1 godzinie (`AXES_*` w `base.py`). Ten sam login z innego IP i inne loginy z tego IP nie są blokowane, więc ktoś znający login nie odetnie właściciela od panelu. `AXES_LOCKOUT_PARAMETERS` musi być listą zagnieżdżoną (`[["username", "ip_address"]]` = kombinacja; płaska lista oznacza „lub”), a przy logowaniu po e-mailu potrzebne jest `AXES_USERNAME_FORM_FIELD = "username"` — bez tego axes zapisuje login jako `None`. `AxesStandaloneBackend` stoi pierwszy w `AUTHENTICATION_BACKENDS`, więc blokada jest sprawdzana zanim `ModelBackend` w ogóle zweryfikuje hasło. W testach wyłączony (`AXES_ENABLED = False` w `testing.py`), żeby testy logowania nie wyzwalały blokady.
 
 **django-otp** — drugi składnik logowania do panelu admina. `admin.site` jest podmieniony na `OTPAdminSite` (`config/urls.py`): formularz logowania ma pole na kod, a dostęp wymaga `request.user.is_verified()` oprócz `is_staff`. Urządzenia: `TOTPDevice` (kody z aplikacji typu Google Authenticator / Aegis) i `StaticDevice` (jednorazowe kody zapasowe). Bez `django-two-factor-auth` nie ma ekranu rejestracji urządzenia — zakłada się je przez shell (patrz [Panel admina — 2FA](#panel-admina--2fa)).
 
@@ -333,7 +333,9 @@ make prod-deploy           # build web + up + migrate + collectstatic jedną kom
 
 ## Panel admina — 2FA
 
-Logowanie do `/admin/` wymaga hasła **i** kodu z aplikacji uwierzytelniającej. Superuser bez urządzenia OTP nie zaloguje się wcale — dotyczy to każdej nowej lub wyczyszczonej bazy (np. po `make docker-clean`).
+Panel jest pod `/admin/` albo pod ścieżką z `ADMIN_URL` w `.env` (po zmianie: restart kontenera). Hasła kont muszą mieć min. 12 znaków.
+
+Logowanie do panelu wymaga hasła **i** kodu z aplikacji uwierzytelniającej. Superuser bez urządzenia OTP nie zaloguje się wcale — dotyczy to każdej nowej lub wyczyszczonej bazy (np. po `make docker-clean`).
 
 Urządzenie zakłada się w shellu (`make docker-shell` lokalnie, `make prod-shell` na serwerze):
 

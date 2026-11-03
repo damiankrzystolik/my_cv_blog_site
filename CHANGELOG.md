@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-03
+### Added
+- Ścieżka panelu admina konfigurowalna przez zmienną `ADMIN_URL` w `.env` (domyślnie `admin/`) — tylko redukcja szumu od botów skanujących `/admin/`, nie kontrola dostępu. `CookieConsentMiddleware` pomija tę ścieżkę zamiast na sztywno wpisanego `/admin/`
+- Testy zabezpieczeń admina (`apps/users/tests/test_admin_security.py`): polityka haseł, `ADMIN_URL` i zachowanie blokady axes przez prawdziwy formularz logowania
+
+### Changed
+- Minimalna długość hasła podniesiona z 8 do 12 znaków (`MinimumLengthValidator`). Rejestracja przez API (`UserSerializer`) używa teraz tych samych `AUTH_PASSWORD_VALIDATORS` zamiast osobnego `min_length=8`. Istniejące hasła działają dalej — reguły obowiązują przy ustawianiu nowego hasła
+
+### Fixed
+- Blokada axes nie rozróżniała użytkowników: przy `USERNAME_FIELD = "email"` axes szukał loginu pod kluczem `email`, a formularz admina przekazuje go jako `username`, więc każda nieudana próba była zapisywana z `username = None`. W połączeniu z płaską listą `AXES_LOCKOUT_PARAMETERS` 5 złych prób z dowolnych adresów blokowało logowanie wszystkim, także właścicielowi. Dodano `AXES_USERNAME_FORM_FIELD = "username"` i zmieniono parametry na kombinację `[["username", "ip_address"]]` — blokowana jest tylko para login + IP, z której szły nieudane próby
+
 ## [0.4.0] - 2026-11-02
 ### Added
 - Ochrona logowania do panelu admina przed brute-force (`django-axes`) — po 5 nieudanych próbach para użytkownik/IP jest blokowana na 1 godzinę. W ustawieniach testowych wyłączone (`AXES_ENABLED = False`)
