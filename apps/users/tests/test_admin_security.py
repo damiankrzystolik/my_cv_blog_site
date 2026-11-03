@@ -1,6 +1,6 @@
 import pytest
+from axes.handlers.proxy import AxesProxyHandler
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.test import RequestFactory
@@ -34,25 +34,32 @@ class TestAxesLockout:
         # testing.py wyłącza axes; tu włączamy go tylko dla tych testów (pytest-django przywraca po teście).
         settings.AXES_ENABLED = True
 
-    def _authenticate(self, ip, user, password):
-        request = RequestFactory().post("/", REMOTE_ADDR=ip)
-        return authenticate(request=request, username=user.email, password=password)
-
-    def _fail_until_locked(self, admin_user):
+    @pytest.fixture(autouse=True)
+    def _fail_from_attacker_ip(self, _enable_axes, client, admin_user):
+        # 5 złych haseł przez prawdziwy formularz admina (middleware + widok), jak z przeglądarki.
         for _ in range(settings.AXES_FAILURE_LIMIT):
-            assert self._authenticate(ATTACKER_IP, admin_user, "wrong-password") is None
+            client.post(
+                reverse("admin:login"),
+                {"username": admin_user.email, "password": "wrong-password"},
+                REMOTE_ADDR=ATTACKER_IP,
+            )
+
+    def _is_allowed(self, ip, username):
+        # Ta sama decyzja, którą AxesStandaloneBackend podejmuje przy każdej próbie logowania.
+        request = RequestFactory().post("/", REMOTE_ADDR=ip)
+        return AxesProxyHandler.is_allowed(request, {"username": username})
 
     def test_account_is_locked_for_attacker_ip(self, admin_user):
-        self._fail_until_locked(admin_user)
+        assert not self._is_allowed(ATTACKER_IP, admin_user.email)
 
-        # Poprawne hasło z tego samego IP — blokada działa.
-        assert self._authenticate(ATTACKER_IP, admin_user, "adminpass123") is None
-
-    def test_owner_can_still_log_in_from_another_ip(self, admin_user):
-        self._fail_until_locked(admin_user)
-
+    def test_owner_is_not_locked_from_another_ip(self, admin_user):
         # Ktoś znający login nie może zablokować właściciela logującego się z innego adresu.
-        assert self._authenticate(OWNER_IP, admin_user, "adminpass123") == admin_user
+        assert self._is_allowed(OWNER_IP, admin_user.email)
+
+    def test_lockout_is_per_username_not_whole_ip(self):
+        # Wymaga AXES_USERNAME_FORM_FIELD = "username" — bez tego axes zapisuje login jako None
+        # i blokada sprowadza się do samego IP.
+        assert self._is_allowed(ATTACKER_IP, "someone-else@example.com")
 
 
 @pytest.mark.django_db

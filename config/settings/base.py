@@ -114,6 +114,9 @@ AXES_COOLOFF_TIME = 1
 # Lista zagnieżdżona = kombinacja (to konto Z TEGO IP). Płaska ["username", "ip_address"] blokowałaby
 # osobno po loginie LUB po IP — każdy znający login mógłby zablokować właściciela z dowolnego adresu.
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+# Domyślnie axes szuka loginu pod USERNAME_FIELD ("email"), a formularz admina i authenticate()
+# przekazują go jako "username" — bez tego axes zapisuje login jako None i ignoruje go przy blokadzie.
+AXES_USERNAME_FORM_FIELD = "username"
 
 LANGUAGE_CODE = "pl-pl"
 TIME_ZONE = "Europe/Warsaw"
