@@ -1,8 +1,10 @@
+from django.conf import settings
+
 from . import conf
 from .models import CookieConsent
 
 # Ścieżki, dla których sprawdzanie zgody nie ma sensu i tylko obciąża bazę.
-_SKIP_PREFIXES = ("/static/", "/media/", "/admin/")
+_SKIP_PREFIXES = ("/static/", "/media/", f"/{settings.ADMIN_URL}")
 
 
 class CookieConsentMiddleware:

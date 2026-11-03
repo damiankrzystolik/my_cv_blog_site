@@ -100,14 +100,23 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Ścieżka panelu admina z .env — nie zabezpieczenie (od tego są axes + OTP), tylko mniej botów w logach.
+# Normalizacja do postaci "sciezka/" niezależnie od tego, czy w .env jest "/sciezka", "sciezka/" czy "sciezka".
+ADMIN_URL = config("ADMIN_URL", default="admin/").strip("/") + "/"
+
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
-AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+# Lista zagnieżdżona = kombinacja (to konto Z TEGO IP). Płaska ["username", "ip_address"] blokowałaby
+# osobno po loginie LUB po IP — każdy znający login mógłby zablokować właściciela z dowolnego adresu.
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+# Domyślnie axes szuka loginu pod USERNAME_FIELD ("email"), a formularz admina i authenticate()
+# przekazują go jako "username" — bez tego axes zapisuje login jako None i ignoruje go przy blokadzie.
+AXES_USERNAME_FORM_FIELD = "username"
 
 LANGUAGE_CODE = "pl-pl"
 TIME_ZONE = "Europe/Warsaw"
