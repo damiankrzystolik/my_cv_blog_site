@@ -16,5 +16,11 @@ def generate_unique_slug(model_class, value, slug_field="slug"):
     return candidate
 
 
+def get_client_ip(request):
+    # X-Real-IP ustawia nginx z $remote_addr — klient nie może go podrobić.
+    # Pierwszy wpis X-Forwarded-For pochodzi od klienta, więc nie nadaje się do limitów.
+    return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR")
+
+
 def sanitize_html(value):
     return bleach.clean(value, tags=SANITIZE_ALLOWED_TAGS, attributes=SANITIZE_ALLOWED_ATTRIBUTES, strip=True)

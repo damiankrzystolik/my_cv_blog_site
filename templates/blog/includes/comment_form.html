@@ -1,0 +1,24 @@
+<h3 class="h5 mt-4 mb-3" id="comment-form">Dodaj komentarz</h3>
+
+<form action="{% url 'blog:post_comment' post.id %}" method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+        {% if field.name == "website" %}
+            {# Pole-pułapka na boty: ukryte dla ludzi, wypełniają je tylko automaty. #}
+            <div class="hp-field" aria-hidden="true">
+                <label for="{{ field.id_for_label }}">Nie wypełniaj tego pola</label>
+                {{ field }}
+            </div>
+        {% else %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+    <p class="form-text">Imię i komentarz będą widoczne publicznie. E-mail nie jest publikowany.</p>
+    <button type="submit" class="btn btn-primary">Wyślij komentarz</button>
+</form>

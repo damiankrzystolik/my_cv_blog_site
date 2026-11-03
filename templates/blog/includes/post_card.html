@@ -1,0 +1,19 @@
+{% with image=post.featured_image %}
+<article class="card mb-4 post-card">
+    {% if image %}
+        <a href="{{ post.get_absolute_url }}">
+            <img src="{{ image.image.url }}" class="card-img-top post-card-image" alt="{{ image.caption }}" loading="lazy">
+        </a>
+    {% endif %}
+    <div class="card-body">
+        <h2 class="card-title h4">
+            <a href="{{ post.get_absolute_url }}" class="text-decoration-none">{{ post.title }}</a>
+        </h2>
+        {% include "blog/includes/post_meta.html" %}
+        <p class="card-text">
+            {% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.rendered_body|striptags|truncatewords:40 }}{% endif %}
+        </p>
+        <a href="{{ post.get_absolute_url }}" class="btn btn-outline-primary btn-sm">Czytaj dalej <i class="bi bi-arrow-right"></i></a>
+    </div>
+</article>
+{% endwith %}

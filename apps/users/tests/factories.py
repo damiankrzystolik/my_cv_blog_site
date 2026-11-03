@@ -9,6 +9,7 @@ fake = Faker("pl_PL")
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
+        skip_postgeneration_save = True  # hook password() sam zapisuje obiekt
 
     email = factory.LazyAttribute(lambda _: fake.email())
     username = factory.LazyAttribute(lambda _: fake.user_name())

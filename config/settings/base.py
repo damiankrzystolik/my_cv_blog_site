@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 
 import structlog
-from decouple import config
+from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -19,9 +19,12 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",  # TrigramSimilarity w wyszukiwarce bloga
+    "django.contrib.sitemaps",
 ]
 
 THIRD_PARTY_APPS = [
+    "taggit",
     "rest_framework",
     "rest_framework_simplejwt",
     "drf_spectacular",
@@ -117,6 +120,25 @@ AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 # Domyślnie axes szuka loginu pod USERNAME_FIELD ("email"), a formularz admina i authenticate()
 # przekazują go jako "username" — bez tego axes zapisuje login jako None i ignoruje go przy blokadzie.
 AXES_USERNAME_FORM_FIELD = "username"
+
+TAGGIT_CASE_INSENSITIVE = True
+
+# Blog — komentarze publikowane od razu, właściciel dostaje e-mail z linkiem do moderacji w adminie.
+BLOG_POSTS_PER_PAGE = 5
+BLOG_COMMENT_RATE_LIMIT = 10  # komentarzy na godzinę z jednego IP
+BLOG_COMMENT_NOTIFY_EMAILS = config("BLOG_COMMENT_NOTIFY_EMAILS", default="", cast=Csv())
+
+# Poczta wychodząca (powiadomienia o komentarzach). Bez EMAIL_HOST maile lądują w logach (console).
+# testing.py nadpisuje backend na locmem.
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST else "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
 LANGUAGE_CODE = "pl-pl"
 TIME_ZONE = "Europe/Warsaw"

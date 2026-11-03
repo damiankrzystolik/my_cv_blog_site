@@ -1,0 +1,37 @@
+{% load blog_tags %}
+
+<div class="sidebar-section">
+    <h2 class="h5"><i class="bi bi-search"></i> Szukaj</h2>
+    <form method="get" action="{% url 'blog:post_search' %}" role="search">
+        <div class="input-group">
+            <input type="search" name="query" class="form-control" placeholder="Wpisz szukaną frazę…"
+                   value="{{ request.GET.query }}" aria-label="Szukana fraza" minlength="2">
+            <button class="btn btn-outline-primary" type="submit" aria-label="Szukaj"><i class="bi bi-search"></i></button>
+        </div>
+    </form>
+</div>
+
+<div class="sidebar-section">
+    <h2 class="h5">O blogu</h2>
+    {% total_posts as total %}
+    <p class="mb-0">
+        Notatki z nauki i budowy tej strony: Django, bezpieczeństwo, Docker.
+        Na razie {{ total }} {{ total|polish_pluralize:"wpis,wpisy,wpisów" }}.
+    </p>
+</div>
+
+{% most_commented_posts 3 as commented %}
+{% if commented %}
+<div class="sidebar-section">
+    <h2 class="h5">Najczęściej komentowane</h2>
+    <ul class="list-unstyled mb-0">
+        {% for post in commented %}
+            <li><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="sidebar-section">
+    <a href="{% url 'blog:post_feed' %}" class="text-decoration-none"><i class="bi bi-rss"></i> RSS</a>
+</div>
