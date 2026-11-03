@@ -1,4 +1,22 @@
+# Osobna nazwa projektu — kontenery testowe nie mieszają się z lokalnym stackiem (db/web/nginx).
+name: my_cv_blog_site_test
+
 services:
+  test-db:
+    image: postgres:17.4-alpine
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    # Baza w RAM — szybciej i nic nie zostaje po testach.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
   test:
     build:
       context: .
@@ -7,6 +25,14 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.testing
       SECRET_KEY: test-secret-key
+      DB_NAME: test_db
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      DB_HOST: test-db
+      DB_PORT: 5432
     command: pytest --cov=apps --cov-report=term -v
     volumes:
       - .:/app
+    depends_on:
+      test-db:
+        condition: service_healthy
