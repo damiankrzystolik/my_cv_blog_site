@@ -1,0 +1,7 @@
+{% comment %}
+Zastępuje dawne analytics_script.html / marketing_script.html - jedna generyczna
+implementacja dla dowolnej grupy cookies (PLAN.md C8/F1). Skrypt renderuje się
+TYLKO gdy jest zgoda - to jedyny skuteczny sposób na zgodność, bo serwer nie
+może skasować cookies, które ustawia JS strony trzeciej po fakcie.
+{% endcomment %}
+{% if has_consent %}{{ script_content|safe }}{% endif %}

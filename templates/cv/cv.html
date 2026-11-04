@@ -1,0 +1,101 @@
+y{% extends "base.html" %}
+
+{% block title %}Moje CV.{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- RZĄD 1: NAGŁÓWEK -->
+    <div class="row">
+        <div class="col-12">
+            <div class="px-4 pt-5 pb-3 text-center">
+                <h1 class="display-4 fw-bold">Krzystolik Damian</h1>
+                <p class="lead mb-4">Python · Data Engineering · Data Analytics</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RZĄD 2: O MNIE -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="p-5 bg-light rounded-3">
+                <h2 class="fw-bold">O mnie</h2>
+                <p class="fs-5 mt-3">Na co dzień pracuję jako Główny Specjalista w zespole pracowni badań paliw stałych. Pełnię również funkcje Zastępcy Kierownika projektu wdrożenia systemu LIMS w moim laboratorium, czyli łączę zespół laboratorium z dostawcą oprogramowania. Ten projekt pokazał mi z bliska, że dobry system zaczyna się od dobrze zrozumianych procesów i jasno określonych wymagań biznesowych. Przy okazji zobaczyłem, ile wartości kryje się w danych, które laboratorium wytwarza na co dzień, i właśnie to skierowało moje zainteresowania w stronę pracy z danymi.</p>
+                <p class="fs-5">Rozwijam się w tym kierunku. Zacząłem studia podyplomowe <strong>Inżynieria danych – Big Data</strong> w Szkole Głównej Handlowej w Warszawie. Równolegle robię na Coursera specjalizację <strong>IBM Machine Learning.</strong> Przygotowuję się też do certyfikatu <strong>Microsoft Azure Data Fundamentals (DP-900)</strong>. Moim głównym narzędziem jest Python. Z zainteresowaniem śledzę też rozwój rozwiązań opartych na sztucznej inteligencji, które coraz mocniej zmieniają sposób pracy w wielu branżach. Z pracy w laboratorium wyniosłem precyzję i analityczne podejście, które przenoszę do kodu i analizy danych.</p>
+                <p class="fs-5">Szukam pracy jako <strong>Junior Python Developer</strong> albo na stanowisku związanym z danymi: analiza danych, inżynieria danych, machine learning. Chcę połączyć doświadczenie z laboratorium i projektu wdrożeniowego z nowymi umiejętnościami technicznymi i dalej rozwijać się w zespole.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RZĄD 3: UMIEJĘTNOŚCI I PROJEKTY -->
+    <div class="row align-items-md-stretch">
+        <!-- Kolumna Umiejętności -->
+        <div class="col-md-5 mb-4 mb-md-0">
+            <div class="h-100 p-5 text-white bg-dark rounded-3">
+                <h2>Umiejętności</h2>
+                <ul class="mt-3">
+                    <li>Python</li>
+                    <li>Django</li>
+                    <li>SQL</li>
+                    <li>PostgreSQL</li>
+                    <li>Git</li>
+                    <li>pandas</li>
+                    <li>scikit-learn</li>
+                    <li>API</li>
+                    <li>Rozwiązywanie problemów</li>
+                    <li>Myślenie analityczne</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Kolumna Projekty -->
+        <div class="col-md-7">
+            <div class="h-100 p-5 bg-light border rounded-3">
+                <h2>Moje Projekty</h2>
+
+                <!-- PROJEKT 3: Strona portfolio (ta strona) -->
+                <div>
+                    <p><strong>Strona portfolio z blogiem w Django</strong></p>
+                    <p class="fst-italic">Ta strona: CV i blog techniczny, zbudowane na własnym szablonie produkcyjnym Django z Dockerem, CI i monitoringiem.</p>
+                    <ul>
+                        <li>Przeniosłem bloga z projektu opartego na książce „Django 5 by Example” i przebudowałem go na warstwy serwisów i selektorów: posty w Markdownie, tagi, komentarze, wyszukiwarka odporna na literówki (pg_trgm), RSS i sitemap.</li>
+                        <li>Zabezpieczyłem komentarze (honeypot, limit na IP, sanityzacja HTML) i panel admina (2FA TOTP, blokada po nieudanych logowaniach).</li>
+                        <li>Skonfigurowałem środowisko w Dockerze (Nginx, uWSGI, PostgreSQL), testy pytest w CI (GitHub Actions) oraz monitoring (Prometheus, Grafana, Sentry).</li>
+                        <li><strong>Technologie:</strong> Python, Django, PostgreSQL, Docker, Nginx, pytest, Bootstrap.</li>
+<!--                        <li><a href="https://github.com/damiankrzystolik/my_cv_blog_site" target="_blank" class="fw-bold">Zobacz kod na GitHubie <i class="bi bi-box-arrow-up-right"></i></a></li>-->
+                    </ul>
+                </div>
+                 <hr>
+                <!-- PROJEKT 1: Symulator Ruchu Lotniczego -->
+                <div class="mt-3">
+                    <p><strong>Symulator Kontroli Ruchu Lotniczego</strong></p>
+                    <p class="fst-italic">Wielowątkowa symulacja w architekturze klient-serwer, obrazująca zarządzanie ruchem lotniczym z wizualizacją 3D w czasie rzeczywistym.</p>
+                    <ul>
+                        <li>Zaprojektowałem architekturę klient-serwer z wielowątkową obsługą każdego samolotu.</li>
+                        <li>Zaimplementowałem system wykrywania kolizji oraz logikę zarządzania pasami startowymi.</li>
+                        <li>Stworzyłem wizualizację 3D (Tkinter, Matplotlib) na podstawie danych z bazy PostgreSQL.</li>
+                        <li><strong>Technologie:</strong> Python, PostgreSQL, Wielowątkowość.</li>
+                        <li><a href="https://gitlab.com/damiankrzystolik/airport" target="_blank" class="fw-bold">Zobacz kod na GitLabie <i class="bi bi-box-arrow-up-right"></i></a></li>
+                    </ul>
+                </div>
+                <hr>
+                <!-- PROJEKT 2: Symulator z REST API -->
+                <div>
+                    <p><strong>Symulator Kontroli Ruchu Lotniczego z REST API</strong></p>
+                    <p class="fst-italic">Zaawansowana wersja symulatora, przebudowana w oparciu o architekturę REST API z interaktywnym panelem kontrolnym.</p>
+                    <ul>
+                        <li>Przebudowałem architekturę na REST API (Flask), oddzielając logikę biznesową od warstwy komunikacji.</li>
+                        <li>Stworzyłem interaktywny panel kontrolny (HTML, JS) do zarządzania cyklem życia symulacji.</li>
+                        <li>Zoptymalizowałem wykrywanie kolizji, implementując algorytm Spatial Hash.</li>
+                        <li><strong>Technologie:</strong> Python, Flask, REST API, PostgreSQL.</li>
+                        <li><a href="https://gitlab.com/damiankrzystolik/airport_api" target="_blank" class="fw-bold">Zobacz kod na GitLabie <i class="bi bi-box-arrow-up-right"></i></a></li>
+                    </ul>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

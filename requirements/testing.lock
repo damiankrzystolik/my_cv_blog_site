@@ -3,6 +3,7 @@
 asgiref==3.11.1
     # via
     #   django
+    #   django-axes
     #   django-cors-headers
 ast-serialize==0.5.0
     # via mypy
@@ -33,17 +34,24 @@ defusedxml==0.7.1
 django==5.2.14
     # via
     #   -r requirements/base.txt
+    #   django-axes
     #   django-cors-headers
     #   django-csp
+    #   django-otp
     #   django-prometheus
     #   django-stubs
     #   django-stubs-ext
+    #   django-taggit
     #   djangorestframework
     #   djangorestframework-simplejwt
     #   drf-spectacular
+django-axes==8.3.1
+    # via -r requirements/base.txt
 django-cors-headers==4.9.0
     # via -r requirements/base.txt
 django-csp==4.0
+    # via -r requirements/base.txt
+django-otp==1.7.0
     # via -r requirements/base.txt
 django-prometheus==2.4.1
     # via -r requirements/base.txt
@@ -51,6 +59,8 @@ django-stubs==6.0.4
     # via -r requirements/testing.txt
 django-stubs-ext==6.0.4
     # via django-stubs
+django-taggit==7.0.0
+    # via -r requirements/base.txt
 djangorestframework==3.17.1
     # via
     #   -r requirements/base.txt
@@ -84,6 +94,8 @@ librt==0.11.0
     # via mypy
 license-expression==30.4.4
     # via cyclonedx-python-lib
+markdown==3.11.2
+    # via -r requirements/base.txt
 markdown-it-py==4.2.0
     # via rich
 mdurl==0.1.2
@@ -104,6 +116,8 @@ packaging==26.2
     #   pytest
 pathspec==1.1.1
     # via mypy
+pillow==13.0.0
+    # via -r requirements/base.txt
 pip==26.1.1
     # via pip-api
 pip-api==0.0.34
@@ -128,6 +142,7 @@ py-serializable==2.1.0
     # via cyclonedx-python-lib
 pygments==2.20.0
     # via
+    #   -r requirements/base.txt
     #   pytest
     #   rich
 pyjwt==2.12.1

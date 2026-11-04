@@ -1,11 +1,3 @@
-# --- Project-specific ---
-notatki/
-.claude/
-requirements/.prod_tmp
-ln_and_blog_articles
-
-
-
 # --- Python ---
 __pycache__/
 *.py[cod]
@@ -33,8 +25,7 @@ media/
 
 # --- Env / secrets ---
 .env
-.env
-!.env
+
 
 # --- Tests / coverage ---
 .pytest_cache/
@@ -61,3 +52,16 @@ coverage.xml
 # --- OS ---
 .DS_Store
 Thumbs.db
+
+# --- Project-specific ---
+notatki/
+.claude/
+requirements/.prod_tmp
+CLAUDE.md
+
+# ckn pozytywka
+public_html
+
+# private
+notatki
+ln-blog

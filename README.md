@@ -1,6 +1,6 @@
-# Django Boilerplate
+# Strona Portfolio - CV + Blog
 
-Production-ready Django project template. Clone, configure `.env`, deploy.
+Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbudowana na bazie produkcyjnego szablonu Django (Docker, monitoring, CI, bezpieczeństwo) opisanego poniżej.
 
 ---
 
@@ -16,6 +16,8 @@ Production-ready Django project template. Clone, configure `.env`, deploy.
 | Monitoring     | django-prometheus → Prometheus → Grafana           |
 | Error tracking | Sentry SDK                                         |
 | Bezpieczeństwo | django-csp, bleach, python-magic                   |
+| Admin          | django-axes (brute-force), django-otp (2FA TOTP)   |
+| Blog           | django-taggit, Markdown + Pygments, Pillow, pg_trgm |
 | Config         | python-decouple (`.env`)                           |
 | Serwer         | uWSGI + Nginx                                      |
 | SSL            | Let's Encrypt (certbot)                            |
@@ -50,6 +52,20 @@ Production-ready Django project template. Clone, configure `.env`, deploy.
 **bleach** — sanityzacja HTML na poziomie aplikacji: `sanitize_html()` w `apps/core/utils.py`. Używać wszędzie tam gdzie user-generated content trafia do bazy i z powrotem do HTML. django-csp chroni przed XSS w przeglądarce, bleach chroni przed XSS zanim dane trafią do bazy.
 
 **python-magic** — weryfikuje rzeczywisty MIME type pliku przez odczyt magic bytes, nie tylko rozszerzenie. Plik `evil.exe` z rozszerzeniem `.jpg` zostanie odrzucony. Używany w `validate_file_extension()` w `apps/core/validators.py`. Wymaga `libmagic1` w kontenerze (jest w Dockerfile).
+
+**django-axes** — blokuje logowanie po 5 nieudanych próbach dla pary użytkownik + IP, blokada znika po 1 godzinie (`AXES_*` w `base.py`). Ten sam login z innego IP i inne loginy z tego IP nie są blokowane, więc ktoś znający login nie odetnie właściciela od panelu. `AXES_LOCKOUT_PARAMETERS` musi być listą zagnieżdżoną (`[["username", "ip_address"]]` = kombinacja; płaska lista oznacza „lub”), a przy logowaniu po e-mailu potrzebne jest `AXES_USERNAME_FORM_FIELD = "username"` — bez tego axes zapisuje login jako `None`. `AxesStandaloneBackend` stoi pierwszy w `AUTHENTICATION_BACKENDS`, więc blokada jest sprawdzana zanim `ModelBackend` w ogóle zweryfikuje hasło. W testach wyłączony (`AXES_ENABLED = False` w `testing.py`), żeby testy logowania nie wyzwalały blokady.
+
+**django-otp** — drugi składnik logowania do panelu admina. `admin.site` jest podmieniony na `OTPAdminSite` (`config/urls.py`): formularz logowania ma pole na kod, a dostęp wymaga `request.user.is_verified()` oprócz `is_staff`. Urządzenia: `TOTPDevice` (kody z aplikacji typu Google Authenticator / Aegis) i `StaticDevice` (jednorazowe kody zapasowe). Bez `django-two-factor-auth` nie ma ekranu rejestracji urządzenia — zakłada się je przez shell (patrz [Panel admina — 2FA](#panel-admina--2fa)).
+
+### Blog
+
+**django-taggit** — tagi postów (`TaggableManager`) bez własnych modeli i tabel pośrednich. `TAGGIT_CASE_INSENSITIVE = True`, żeby „Django” i „django” były jednym tagiem.
+
+**Markdown + Pygments** — treść postów pisana w Markdownie, bloki kodu podświetlane przez Pygments (style w `static/blog/css/pygments.css`). Wynikowy HTML przechodzi przez bleach z osobną whitelistą (`apps/blog/rendering.py`) zanim trafi do szablonu.
+
+**Pillow** — wymagany przez `ImageField` (obrazki postów, `BlogImage`).
+
+**pg_trgm** (`django.contrib.postgres`) — wyszukiwarka po tytułach przez `TrigramSimilarity`, odporna na literówki. Rozszerzenie włącza migracja `blog.0002` — kod bloga nie zadziała na SQLite.
 
 ### Logging
 
@@ -108,17 +124,30 @@ Production-ready Django project template. Clone, configure `.env`, deploy.
 .
 ├── apps/
 │   ├── core/                   # shared utilities, middleware, base models
-│   │   ├── utils.py            # generate_unique_slug, sanitize_html
+│   │   ├── utils.py            # generate_unique_slug, sanitize_html, get_client_ip
 │   │   ├── validators.py       # validate_file_extension (MIME + magic bytes)
 │   │   ├── middleware.py       # RequestContextMiddleware (request_id)
 │   │   └── exceptions.py
-│   └── users/                  # custom user model + CRUD API
+│   ├── users/                  # custom user model + CRUD API
+│   ├── cookies/                # cookie consent management (banner, preferences, policy)
+│   │   ├── models.py           # CookieConsent
+│   │   ├── middleware.py       # CookieConsentMiddleware
+│   │   ├── management/commands/ # setup_cookies, cleanup_consents
+│   │   └── README.md
+│   ├── cv/                     # static CV/homepage app (served at "/")
+│   └── blog/                   # blog at "/blog/": posts (Markdown), tags, comments, search, RSS, sitemap
+│       ├── models.py           # Post, Comment, BlogImage
+│       ├── selectors.py        # PostSelector — zapytania (prefetch, wyszukiwanie trigramowe)
+│       ├── services.py         # CommentService — limit, hash IP, e-mail do właściciela
+│       ├── rendering.py        # Markdown → sanityzowany HTML, znaczniki [[imageN]]
+│       ├── feeds.py / sitemaps.py
+│       └── tests/
 ├── config/
 │   ├── settings/
 │   │   ├── base.py             # wspólne: apps, middleware, DRF, CSP, structlog, LOGGING
 │   │   ├── development.py      # debug toolbar, CORS allow all, SQLite-like dev settings
 │   │   ├── production.py       # security headers, Sentry, Prometheus port
-│   │   └── testing.py          # SQLite :memory:, fast hashers
+│   │   └── testing.py          # Postgres z env DB_*, fast hashers, locmem e-mail
 │   ├── nginx/
 │   │   ├── local.conf.template     # HTTP, proxy do runserver
 │   │   └── default.conf.template   # HTTPS + Let's Encrypt
@@ -143,7 +172,7 @@ Production-ready Django project template. Clone, configure `.env`, deploy.
 │   └── wait-for-it.sh
 ├── docker-compose.local.yml    # dev: db + web (runserver) + nginx
 ├── docker-compose.prod.yml     # prod: db + web (uWSGI) + nginx + certbot + prometheus + grafana
-├── docker-compose.test.yml     # CI: pytest w kontenerze
+├── docker-compose.test.yml     # pytest w kontenerze + Postgres test-db (tmpfs)
 ├── Dockerfile
 ├── Makefile
 ├── pyproject.toml              # ruff + pytest + coverage + mypy config
@@ -195,8 +224,17 @@ ALLOWED_HOSTS=
 CORS_ALLOWED_ORIGINS=
 CSRF_TRUSTED_ORIGINS=
 SENTRY_DSN=
-APP_VERSION=0.1.0
+ADMIN_URL=admin/         # ścieżka panelu admina (domyślnie admin/) — tylko redukcja szumu od botów, nie zabezpieczenie
 GRAFANA_ADMIN_PASSWORD=
+
+# Poczta (powiadomienia o komentarzach na blogu) — bez EMAIL_HOST maile lądują w logach (console)
+EMAIL_HOST=
+EMAIL_PORT=587
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+EMAIL_USE_TLS=True
+DEFAULT_FROM_EMAIL=
+BLOG_COMMENT_NOTIFY_EMAILS=   # adresy oddzielone przecinkami
 ```
 
 ---
@@ -208,7 +246,7 @@ GRAFANA_ADMIN_PASSWORD=
 | `base.py`        | wspólny — apps, middleware, DRF, CSP, structlog       |
 | `development.py` | lokalnie — debug toolbar, CORS allow all              |
 | `production.py`  | produkcja — security headers, Sentry, Prometheus port |
-| `testing.py`     | testy — SQLite :memory:, szybkie hashery              |
+| `testing.py`     | testy — Postgres (env `DB_*`), szybkie hashery        |
 
 ---
 
@@ -237,9 +275,14 @@ make shell            # shell_plus
 make docker-build              # zbuduj image
 make docker-up                 # uruchom stack (db + web + nginx)
 make docker-down
+make docker-stop               # zatrzymaj kontenery bez usuwania
+make docker-start              # wznów zatrzymane kontenery
 make docker-logs
 make docker-migrate            # makemigrations + migrate w kontenerze
-make docker-migrate-check      # sprawdź czy migracje są aktualne
+make docker-check-makemigrations  # czy brakuje plików migracji (--check --dry-run)
+make docker-check-migrate      # czy wszystkie migracje są zastosowane
+make docker-showmigrations     # lista migracji i ich stan
+make docker-check-deploy       # manage.py check --deploy
 make docker-collectstatic
 make docker-createsuperuser
 make docker-shell              # shell_plus w kontenerze
@@ -293,6 +336,7 @@ make prod-up               # uruchom: db, web, nginx, certbot, prometheus, grafa
 make prod-migrate
 make prod-collectstatic
 make prod-createsuperuser
+make prod-shell            # załóż urządzenie 2FA dla admina — patrz "Panel admina — 2FA"
 
 # certyfikat SSL — domena musi już wskazywać na serwer (A record w DNS)
 make prod-ssl DOMAIN=example.com EMAIL=admin@example.com
@@ -310,6 +354,35 @@ make prod-logs             # sprawdź czy wszystko działa
 git pull
 make prod-deploy           # build web + up + migrate + collectstatic jedną komendą
 ```
+
+---
+
+## Panel admina — 2FA
+
+Panel jest pod `/admin/` albo pod ścieżką z `ADMIN_URL` w `.env` (po zmianie: restart kontenera). Hasła kont muszą mieć min. 12 znaków.
+
+Logowanie do panelu wymaga hasła **i** kodu z aplikacji uwierzytelniającej. Superuser bez urządzenia OTP nie zaloguje się wcale — dotyczy to każdej nowej lub wyczyszczonej bazy (np. po `make docker-clean`).
+
+Urządzenie zakłada się w shellu (`make docker-shell` lokalnie, `make prod-shell` na serwerze):
+
+```python
+from django.contrib.auth import get_user_model
+from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
+from django_otp.plugins.otp_totp.models import TOTPDevice
+
+user = get_user_model().objects.get(email="admin@example.com")
+
+totp = TOTPDevice.objects.create(user=user, name="authenticator", confirmed=True)
+print(totp.config_url)  # otpauth://... → wklej/zeskanuj w aplikacji (Aegis, Google Authenticator)
+
+backup = StaticDevice.objects.create(user=user, name="backup")
+for _ in range(10):
+    print(StaticToken.objects.create(device=backup, token=StaticToken.random_token()).token)
+```
+
+Kody zapasowe zapisz poza serwerem — każdy działa jeden raz. Urządzenia są też widoczne i edytowalne w adminie (sekcje *OTP_TOTP* / *OTP_STATIC*).
+
+Zablokowany przez axes (5 błędnych logowań): poczekaj godzinę albo `manage.py axes_reset`.
 
 ---
 
@@ -373,5 +446,7 @@ Alerty są widoczne w Prometheus UI (`/alerts`). Żeby dostawać powiadomienia (
 make test           # lokalnie
 make docker-test    # w kontenerze (docker-compose.test.yml)
 ```
+
+Testy idą na PostgreSQL, tak jak produkcja: `make docker-test` stawia osobny kontener `test-db` (baza na tmpfs), w CI działa service `postgres`. `make test` lokalnie wymaga Postgresa dostępnego pod `DB_HOST`/`DB_PORT` z `testing.py`.
 
 Coverage minimum: **70%** (`pyproject.toml`).

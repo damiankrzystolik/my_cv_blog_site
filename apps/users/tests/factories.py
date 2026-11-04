@@ -1,13 +1,15 @@
 import factory
 from faker import Faker
+
 from apps.users.models import User
 
-fake = Faker('pl_PL')
+fake = Faker("pl_PL")
 
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
+        skip_postgeneration_save = True  # hook password() sam zapisuje obiekt
 
     email = factory.LazyAttribute(lambda _: fake.email())
     username = factory.LazyAttribute(lambda _: fake.user_name())
@@ -17,6 +19,6 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def password(self, create, extracted, **kwargs):
-        self.set_password(extracted or 'testpass123')
+        self.set_password(extracted or "testpass123")
         if create:
             self.save()

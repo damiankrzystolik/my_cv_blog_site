@@ -1,0 +1,36 @@
+{% comment %}
+Partial banera zgody na ciasteczka. NIE jest osobną stroną (brak <html>/<body>) -
+renderowany przez {% cookie_consent_banner %} i wstawiany do base.html projektu,
+tuż przed </body> (PLAN.md D2/D5):
+
+    {% load cookie_tags %}
+    {% cookie_consent_banner %}
+
+CSS/JS są w plikach statycznych (static/cookies/css/cookies.css,
+static/cookies/js/cookies.js), nie inline - dzięki temu strona może mieć
+restrykcyjne CSP bez 'unsafe-inline' (PLAN.md E1-E3).
+{% endcomment %}
+{% if show_banner %}
+{% csrf_token %}
+<div class="cookie-banner" id="cookieBanner" data-cookie-banner data-consent-url="{% url 'cookies:consent' %}" role="dialog" aria-live="polite">
+    <div class="cookie-banner-content">
+        <div class="cookie-banner-text">
+            <p><strong>Ta strona używa ciasteczek</strong></p>
+            <p>Używamy ciasteczek, aby zapewnić prawidłowe działanie strony, analizować ruch
+               i dopasowywać treści do Twoich preferencji. Możesz zaakceptować wszystkie,
+               odrzucić nieobowiązkowe albo dostosować ustawienia.</p>
+        </div>
+        <div class="cookie-banner-actions">
+            <button type="button" class="cookie-btn cookie-btn-accept" data-cookie-action="accept_all">
+                Akceptuj wszystkie
+            </button>
+            <button type="button" class="cookie-btn cookie-btn-reject" data-cookie-action="reject_all">
+                Tylko niezbędne
+            </button>
+            <a href="{% url 'cookies:preferences' %}" class="cookie-btn cookie-btn-settings">
+                Dostosuj
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}

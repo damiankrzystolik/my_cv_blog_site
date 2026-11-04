@@ -1,0 +1,14 @@
+{# Zwykłe linki — bez skryptów zewnętrznych serwisów i bez wysyłania maili przez serwer. #}
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <a class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer"
+       href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode:'' }}">
+        <i class="bi bi-linkedin"></i> LinkedIn
+    </a>
+    <a class="btn btn-outline-secondary btn-sm"
+       href="mailto:?subject={{ post.title|urlencode:'' }}&amp;body={{ share_url|urlencode:'' }}">
+        <i class="bi bi-envelope"></i> E-mail
+    </a>
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-copy-url="{{ share_url }}">
+        <i class="bi bi-link-45deg"></i> <span data-copy-label>Kopiuj link</span>
+    </button>
+</div>

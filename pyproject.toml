@@ -1,6 +1,12 @@
 [project]
-name = "django-template"
-version = "1.0.1"
+name = "my-cv-blog-site"
+version = "0.6.0"
+dependencies = [
+    "django>=5.2.15",
+    "django-axes>=8.3.1",
+    "ruff>=0.15.20",
+    "django-otp>=1.5.0",
+]
 
 [tool.ruff]
 target-version = "py312"
@@ -11,6 +17,9 @@ exclude = [".git", ".venv", "__pycache__", "migrations", "staticfiles"]
 select = ["E", "W", "F", "I", "B", "C4", "UP", "DJ"]
 ignore = ["E501", "B008"]
 
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["apps", "config"]
 
@@ -19,7 +28,8 @@ quote-style = "double"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.testing"
-python_files = ["test_*.py"]
+testpaths = ["apps"]
+python_files = ["test_*.py", "tests.py"]
 addopts = ["--strict-markers", "--tb=short", "-ra"]
 markers = [
     "slow: marks tests as slow",
@@ -43,4 +53,3 @@ warn_unused_ignores = true
 
 [tool.django-stubs]
 django_settings_module = "config.settings.testing"
-

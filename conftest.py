@@ -1,6 +1,6 @@
 import pytest
-from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -13,9 +13,9 @@ def api_client():
 @pytest.fixture
 def user(db):
     return User.objects.create_user(
-        email='test@example.com',
-        username='testuser',
-        password='testpass123',
+        email="test@example.com",
+        username="testuser",
+        password="testpass123",
     )
 
 
@@ -28,7 +28,7 @@ def authenticated_client(api_client, user):
 @pytest.fixture
 def admin_user(db):
     return User.objects.create_superuser(
-        email='admin@example.com',
-        username='admin',
-        password='adminpass123',
+        email="admin@example.com",
+        username="admin",
+        password="adminpass123",
     )
