@@ -12,7 +12,7 @@ W `config/settings/base.py` w `LOCAL_APPS`:
 
 ```python
 LOCAL_APPS = [
-    ... ,
+    ...,
     "apps.cookies",
 ]
 ```
