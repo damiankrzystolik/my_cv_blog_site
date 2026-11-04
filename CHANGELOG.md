@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-04
+### Added
+- `apps/blog`: pełny blog pod `/blog/` zamiast placeholdera — posty w Markdownie z podświetlaniem składni (Pygments), tagi (`django-taggit`), obrazki wstawiane w treść przez znaczniki `[[image1]]`, `[[image2]]`… (model `BlogImage`, jeden obrazek wyróżniony na liście postów), szkice i publikacja z datą (`Post.published`), paginacja, linki do udostępniania posta
+- Komentarze pod postami — widoczne od razu, moderowane w adminie. Ochrona przed spamem: pole-pułapka (honeypot) i limit 10 komentarzy na godzinę z jednego IP (`BLOG_COMMENT_RATE_LIMIT`); w bazie zapisywany jest HMAC adresu IP, nie sam adres. Właściciel dostaje e-mail o nowym komentarzu (`BLOG_COMMENT_NOTIFY_EMAILS`)
+- Wyszukiwarka postów po tytule odporna na literówki (`TrigramSimilarity`, rozszerzenie `pg_trgm` włączane migracją `blog.0002`)
+- Kanał RSS (`/blog/feed/`) i `sitemap.xml` z postami i tagami
+- Wyrenderowany Markdown jest sanityzowany przez bleach (whitelista tagów, atrybutów i protokołów linków) przed oznaczeniem jako bezpieczny
+- `apps.core.utils.get_client_ip` — adres klienta z nagłówka `X-Real-IP` ustawianego przez nginx
+- Konfiguracja poczty wychodzącej przez `.env` (`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`), przekazywana też w `docker-compose.prod.yml`
+- Zależności: `django-taggit`, `Markdown`, `Pygments`, `Pillow`
+- Testy bloga: sanityzacja Markdownu, widoczność szkiców, tagi, paginacja, liczba zapytań, wyszukiwanie z literówkami, komentarze (limit, honeypot, e-mail, escapowanie), RSS, sitemap
+
+### Changed
+- Testy działają na PostgreSQL zamiast SQLite — lokalnie osobny kontener `test-db` (`postgres:17.4-alpine`, baza na tmpfs) w `docker-compose.test.yml`, w CI service `postgres`. SQLite różnił się od produkcji zachowaniem zapytań i nie ma `pg_trgm`
+- Ustawienia poczty przeniesione do `base.py`: backend SMTP, gdy ustawiono `EMAIL_HOST`, w przeciwnym razie console (wcześniej console był wpisany na sztywno w `development.py`)
+
 ## [0.5.0] - 2026-11-03
 ### Added
 - Ścieżka panelu admina konfigurowalna przez zmienną `ADMIN_URL` w `.env` (domyślnie `admin/`) — tylko redukcja szumu od botów skanujących `/admin/`, nie kontrola dostępu. `CookieConsentMiddleware` pomija tę ścieżkę zamiast na sztywno wpisanego `/admin/`

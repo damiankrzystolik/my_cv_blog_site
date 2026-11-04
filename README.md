@@ -1,6 +1,6 @@
 # Strona Portfolio - CV + Blog
 
-Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o bloga. Zbudowana na bazie produkcyjnego szablonu Django (Docker, monitoring, CI, bezpieczeństwo) opisanego poniżej.
+Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbudowana na bazie produkcyjnego szablonu Django (Docker, monitoring, CI, bezpieczeństwo) opisanego poniżej.
 
 ---
 
@@ -17,6 +17,7 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 | Error tracking | Sentry SDK                                         |
 | Bezpieczeństwo | django-csp, bleach, python-magic                   |
 | Admin          | django-axes (brute-force), django-otp (2FA TOTP)   |
+| Blog           | django-taggit, Markdown + Pygments, Pillow, pg_trgm |
 | Config         | python-decouple (`.env`)                           |
 | Serwer         | uWSGI + Nginx                                      |
 | SSL            | Let's Encrypt (certbot)                            |
@@ -55,6 +56,16 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 **django-axes** — blokuje logowanie po 5 nieudanych próbach dla pary użytkownik + IP, blokada znika po 1 godzinie (`AXES_*` w `base.py`). Ten sam login z innego IP i inne loginy z tego IP nie są blokowane, więc ktoś znający login nie odetnie właściciela od panelu. `AXES_LOCKOUT_PARAMETERS` musi być listą zagnieżdżoną (`[["username", "ip_address"]]` = kombinacja; płaska lista oznacza „lub”), a przy logowaniu po e-mailu potrzebne jest `AXES_USERNAME_FORM_FIELD = "username"` — bez tego axes zapisuje login jako `None`. `AxesStandaloneBackend` stoi pierwszy w `AUTHENTICATION_BACKENDS`, więc blokada jest sprawdzana zanim `ModelBackend` w ogóle zweryfikuje hasło. W testach wyłączony (`AXES_ENABLED = False` w `testing.py`), żeby testy logowania nie wyzwalały blokady.
 
 **django-otp** — drugi składnik logowania do panelu admina. `admin.site` jest podmieniony na `OTPAdminSite` (`config/urls.py`): formularz logowania ma pole na kod, a dostęp wymaga `request.user.is_verified()` oprócz `is_staff`. Urządzenia: `TOTPDevice` (kody z aplikacji typu Google Authenticator / Aegis) i `StaticDevice` (jednorazowe kody zapasowe). Bez `django-two-factor-auth` nie ma ekranu rejestracji urządzenia — zakłada się je przez shell (patrz [Panel admina — 2FA](#panel-admina--2fa)).
+
+### Blog
+
+**django-taggit** — tagi postów (`TaggableManager`) bez własnych modeli i tabel pośrednich. `TAGGIT_CASE_INSENSITIVE = True`, żeby „Django” i „django” były jednym tagiem.
+
+**Markdown + Pygments** — treść postów pisana w Markdownie, bloki kodu podświetlane przez Pygments (style w `static/blog/css/pygments.css`). Wynikowy HTML przechodzi przez bleach z osobną whitelistą (`apps/blog/rendering.py`) zanim trafi do szablonu.
+
+**Pillow** — wymagany przez `ImageField` (obrazki postów, `BlogImage`).
+
+**pg_trgm** (`django.contrib.postgres`) — wyszukiwarka po tytułach przez `TrigramSimilarity`, odporna na literówki. Rozszerzenie włącza migracja `blog.0002` — kod bloga nie zadziała na SQLite.
 
 ### Logging
 
@@ -113,7 +124,7 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 .
 ├── apps/
 │   ├── core/                   # shared utilities, middleware, base models
-│   │   ├── utils.py            # generate_unique_slug, sanitize_html
+│   │   ├── utils.py            # generate_unique_slug, sanitize_html, get_client_ip
 │   │   ├── validators.py       # validate_file_extension (MIME + magic bytes)
 │   │   ├── middleware.py       # RequestContextMiddleware (request_id)
 │   │   └── exceptions.py
@@ -124,13 +135,19 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 │   │   ├── management/commands/ # setup_cookies, cleanup_consents
 │   │   └── README.md
 │   ├── cv/                     # static CV/homepage app (served at "/")
-│   └── blog/                   # blog app scaffold, served at "/blog/" (in progress)
+│   └── blog/                   # blog at "/blog/": posts (Markdown), tags, comments, search, RSS, sitemap
+│       ├── models.py           # Post, Comment, BlogImage
+│       ├── selectors.py        # PostSelector — zapytania (prefetch, wyszukiwanie trigramowe)
+│       ├── services.py         # CommentService — limit, hash IP, e-mail do właściciela
+│       ├── rendering.py        # Markdown → sanityzowany HTML, znaczniki [[imageN]]
+│       ├── feeds.py / sitemaps.py
+│       └── tests/
 ├── config/
 │   ├── settings/
 │   │   ├── base.py             # wspólne: apps, middleware, DRF, CSP, structlog, LOGGING
 │   │   ├── development.py      # debug toolbar, CORS allow all, SQLite-like dev settings
 │   │   ├── production.py       # security headers, Sentry, Prometheus port
-│   │   └── testing.py          # SQLite :memory:, fast hashers
+│   │   └── testing.py          # Postgres z env DB_*, fast hashers, locmem e-mail
 │   ├── nginx/
 │   │   ├── local.conf.template     # HTTP, proxy do runserver
 │   │   └── default.conf.template   # HTTPS + Let's Encrypt
@@ -155,7 +172,7 @@ Osobista strona portfolio — CV na stronie tytułowej, docelowo rozszerzana o b
 │   └── wait-for-it.sh
 ├── docker-compose.local.yml    # dev: db + web (runserver) + nginx
 ├── docker-compose.prod.yml     # prod: db + web (uWSGI) + nginx + certbot + prometheus + grafana
-├── docker-compose.test.yml     # CI: pytest w kontenerze
+├── docker-compose.test.yml     # pytest w kontenerze + Postgres test-db (tmpfs)
 ├── Dockerfile
 ├── Makefile
 ├── pyproject.toml              # ruff + pytest + coverage + mypy config
@@ -209,6 +226,15 @@ CSRF_TRUSTED_ORIGINS=
 SENTRY_DSN=
 ADMIN_URL=admin/         # ścieżka panelu admina (domyślnie admin/) — tylko redukcja szumu od botów, nie zabezpieczenie
 GRAFANA_ADMIN_PASSWORD=
+
+# Poczta (powiadomienia o komentarzach na blogu) — bez EMAIL_HOST maile lądują w logach (console)
+EMAIL_HOST=
+EMAIL_PORT=587
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+EMAIL_USE_TLS=True
+DEFAULT_FROM_EMAIL=
+BLOG_COMMENT_NOTIFY_EMAILS=   # adresy oddzielone przecinkami
 ```
 
 ---
@@ -220,7 +246,7 @@ GRAFANA_ADMIN_PASSWORD=
 | `base.py`        | wspólny — apps, middleware, DRF, CSP, structlog       |
 | `development.py` | lokalnie — debug toolbar, CORS allow all              |
 | `production.py`  | produkcja — security headers, Sentry, Prometheus port |
-| `testing.py`     | testy — SQLite :memory:, szybkie hashery              |
+| `testing.py`     | testy — Postgres (env `DB_*`), szybkie hashery        |
 
 ---
 
@@ -420,5 +446,7 @@ Alerty są widoczne w Prometheus UI (`/alerts`). Żeby dostawać powiadomienia (
 make test           # lokalnie
 make docker-test    # w kontenerze (docker-compose.test.yml)
 ```
+
+Testy idą na PostgreSQL, tak jak produkcja: `make docker-test` stawia osobny kontener `test-db` (baza na tmpfs), w CI działa service `postgres`. `make test` lokalnie wymaga Postgresa dostępnego pod `DB_HOST`/`DB_PORT` z `testing.py`.
 
 Coverage minimum: **70%** (`pyproject.toml`).
