@@ -53,16 +53,16 @@ y{% extends "base.html" %}
             <div class="h-100 p-5 bg-light border rounded-3">
                 <h2>Moje Projekty</h2>
 
-                <!-- PROJEKT 3: Django 5 Book Project -->
+                <!-- PROJEKT 3: Strona portfolio (ta strona) -->
                 <div>
-                    <p><strong>Projekt strony Portfolio w Django</strong></p>
-                    <p class="fst-italic">Projekt oparty na książce "Django 5 by Example", zawierający stronę CV oraz aplikację blogową</p>
+                    <p><strong>Strona portfolio z blogiem w Django</strong></p>
+                    <p class="fst-italic">Ta strona: CV i blog techniczny, zbudowane na własnym szablonie produkcyjnym Django z Dockerem, CI i monitoringiem.</p>
                     <ul>
-                        <li>Zaimplementowałem aplikację blogową z postami, komentarzami, tagami i wyszukiwarką.</li>
-                        <li>Stworzyłem aplikację CV do dynamicznego wyświetlania życiorysu.</li>
-                        <li>placeholder</li>
-                        <li><strong>Technologie:</strong> Python, Django, PostgreSQL, HTML, Bootstrap.</li>
-<!--                        <li><a href="" target="_blank" class="fw-bold">Zobacz kod na GitLabie <i class="bi bi-box-arrow-up-right"></i></a></li>-->
+                        <li>Przeniosłem bloga z projektu opartego na książce „Django 5 by Example” i przebudowałem go na warstwy serwisów i selektorów: posty w Markdownie, tagi, komentarze, wyszukiwarka odporna na literówki (pg_trgm), RSS i sitemap.</li>
+                        <li>Zabezpieczyłem komentarze (honeypot, limit na IP, sanityzacja HTML) i panel admina (2FA TOTP, blokada po nieudanych logowaniach).</li>
+                        <li>Skonfigurowałem środowisko w Dockerze (Nginx, uWSGI, PostgreSQL), testy pytest w CI (GitHub Actions) oraz monitoring (Prometheus, Grafana, Sentry).</li>
+                        <li><strong>Technologie:</strong> Python, Django, PostgreSQL, Docker, Nginx, pytest, Bootstrap.</li>
+<!--                        <li><a href="https://github.com/damiankrzystolik/my_cv_blog_site" target="_blank" class="fw-bold">Zobacz kod na GitHubie <i class="bi bi-box-arrow-up-right"></i></a></li>-->
                     </ul>
                 </div>
                  <hr>
