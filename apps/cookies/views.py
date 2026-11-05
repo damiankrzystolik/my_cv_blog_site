@@ -8,6 +8,8 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from apps.core.utils import get_client_ip
+
 from . import conf
 from .models import CookieConsent, CookieConsentLog, CookieGroup
 
@@ -143,7 +145,7 @@ def _get_or_create_consent(request):
     if consent is None:
         consent = CookieConsent.objects.create(
             user=request.user if request.user.is_authenticated else None,
-            ip_address=_get_client_ip(request) if conf.STORE_IP else None,
+            ip_address=get_client_ip(request) if conf.STORE_IP else None,
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             expires_at=timezone.now() + timezone.timedelta(days=conf.CONSENT_DURATION_DAYS),
         )
@@ -163,14 +165,3 @@ def _set_consent_cookie(response, consent):
         httponly=True,
         samesite=conf.CONSENT_COOKIE_SAMESITE,
     )
-
-
-def _get_client_ip(request):
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        return x_forwarded_for.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
-
-
-# Alias zachowany dla kompatybilności z istniejącymi testami/importami.
-get_client_ip = _get_client_ip

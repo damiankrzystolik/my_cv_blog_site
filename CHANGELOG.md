@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-05
+### Added
+- `make prod-ssl-init` — pierwszy certyfikat Let's Encrypt dla domeny i `www`, uruchamiany przed startem nginx (certbot `--standalone` na porcie 80). Rozwiązuje błędne koło: nginx nie startował bez certyfikatu, a dotychczasowy tryb `--webroot` wymagał działającego nginx
+- Zmienna `DOMAIN` w `.env` — domena w `config/nginx/default.conf.template` podstawiana przy starcie kontenera zamiast ręcznej edycji pliku; `docker-compose.prod.yml` przerywa start, gdy jej brakuje
+- `.env.example` z listą zmiennych środowiskowych
+- Testy: nagłówek `Content-Security-Policy`, token CSRF w banerze ciasteczek
+
+### Changed
+- `make prod-ssl-renew` odnawia certyfikat przez `--webroot` — `certbot renew` użyłby zapisanej metody `standalone`, a port 80 zajmuje nginx
+- Kolejność pierwszego wdrożenia w README i `Makefile`: certyfikat przed `make prod-up`; rekordy DNS dla domeny i `www` muszą już istnieć
+- Zaktualizowano bio, nagłówek, umiejętności i projekt portfolio na stronie CV
+- CI: wersja ruff przypięta do wersji z lockfile'a deweloperskiego
+
+### Removed
+- `make prod-ssl` — zastąpiony przez `make prod-ssl-init`
+
+### Fixed
+- Nagłówek `Content-Security-Policy` nie był wysyłany: django-csp 4.0 ignoruje stare ustawienia `CSP_*`. Polityka przeniesiona do `CONTENT_SECURITY_POLICY` i dopuszcza CDN jsDelivr; minimalna wersja podniesiona do `django-csp>=4.0`
+- Podrabianie adresu IP w produkcji: nginx ustawia teraz `X-Real-IP` i `X-Forwarded-Proto` dla `uwsgi_pass`, więc nagłówki klienta nie obchodzą już limitu komentarzy
+- Rekordy zgody na ciasteczka używają `apps.core.utils.get_client_ip` zamiast pierwszego wpisu z `X-Forwarded-For`, który kontroluje klient
+- Produkcja montuje tylko `default.conf.template` — wcześniej nginx renderował też `local.conf.template`, który łączy się z uWSGI przez HTTP
+- Przyciski banera ciasteczek na produkcji: `cookies.js` czyta token z formularza baneru, bo `CSRF_COOKIE_HTTPONLY` ukrywa ciasteczko `csrftoken` przed JavaScriptem
+- `cookies.js` ładował się dwa razy na stronie preferencji, przez co każde kliknięcie obsługiwane było podwójnie
+- Komunikaty ze strony preferencji ciasteczek wyświetlały się dopiero na blogu; znacznik komunikatów przeniesiony do `templates/includes/messages.html`
+- Litera `y` przed `<!DOCTYPE>` na stronie CV, która włączała w przeglądarce tryb quirks
+- Brak `<meta name="viewport">` w `base.html` — telefony renderowały stronę w szerokości desktopowej
+- `django_extensions` włączone w `development.py`, potrzebne do `make docker-shell` (`shell_plus`)
+
 ## [0.6.0] - 2026-11-04
 ### Added
 - `apps/blog`: pełny blog pod `/blog/` zamiast placeholdera — posty w Markdownie z podświetlaniem składni (Pygments), tagi (`django-taggit`), obrazki wstawiane w treść przez znaczniki `[[image1]]`, `[[image2]]`… (model `BlogImage`, jeden obrazek wyróżniony na liście postów), szkice i publikacja z datą (`Post.published`), paginacja, linki do udostępniania posta
