@@ -16,13 +16,7 @@
         <a href="{% url 'blog:post_list' %}" class="text-decoration-none"><i class="bi bi-journal-text"></i> Blog</a>
     </nav>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+    {% include "includes/messages.html" %}
 
     <div class="row">
         <main class="col-lg-8">
