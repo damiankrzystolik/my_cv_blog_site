@@ -170,7 +170,6 @@ prod-ssl-init:
 		certonly --standalone \
 		-d $(DOMAIN) -d www.$(DOMAIN) --email $(EMAIL) --agree-tos --non-interactive
 
-
 # --webroot jawnie: certbot renew użyłby zapisanej metody standalone, a port 80 zajmuje nginx
 prod-ssl-renew:
 	docker compose -f docker-compose.prod.yml run --rm certbot renew --webroot --webroot-path=/var/www/certbot --quiet
