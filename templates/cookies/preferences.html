@@ -16,6 +16,7 @@
                     <h1 class="mb-0">Preferencje ciasteczek</h1>
                 </div>
                 <div class="card-body">
+                    {% include "includes/messages.html" %}
                     {% if current_consent %}
                         <div class="alert alert-info">
                             <strong>Status:</strong> Twoje preferencje są aktywne od {{ current_consent.consent_given_at|date:"d.m.Y H:i" }}
@@ -91,8 +92,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'cookies/js/cookies.js' %}"></script>
 {% endblock %}

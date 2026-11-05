@@ -2,6 +2,7 @@ import tomllib
 from pathlib import Path
 
 import structlog
+from csp.constants import NONE, SELF
 from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -71,15 +72,21 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
-CSP_STYLE_SRC = ("'self'",)
-CSP_IMG_SRC = ("'self'", "data:")
-CSP_FONT_SRC = ("'self'",)
-CSP_CONNECT_SRC = ("'self'",)
-CSP_OBJECT_SRC = ("'none'",)
-CSP_BASE_URI = ("'self'",)
-CSP_FRAME_ANCESTORS = ("'none'",)
+CDN_JSDELIVR = "https://cdn.jsdelivr.net"
+
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": [SELF],
+        "script-src": [SELF, CDN_JSDELIVR],
+        "style-src": [SELF, CDN_JSDELIVR],
+        "img-src": [SELF, "data:"],
+        "font-src": [SELF, CDN_JSDELIVR],
+        "connect-src": [SELF],
+        "object-src": [NONE],
+        "base-uri": [SELF],
+        "frame-ancestors": [NONE],
+    },
+}
 
 ROOT_URLCONF = "config.urls"
 

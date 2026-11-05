@@ -5,7 +5,7 @@
         docker-shell docker-test docker-clean docker-check-deploy \
         prod-build prod-up prod-deploy prod-down prod-restart prod-logs \
         prod-migrate prod-collectstatic prod-createsuperuser prod-shell \
-        prod-ssl prod-ssl-renew prod-cron-install prod-cron-remove
+        prod-ssl-init prod-ssl-renew prod-cron-install prod-cron-remove
 
 # Wymagania lokalne: python 3.12+, uv (pip install uv), make
 # Wymagania na serwerze: git, make, docker (z docker compose v2)
@@ -118,12 +118,12 @@ docker-check-deploy:
 #   1. git clone <repo> && cd <repo>
 #   2. cp .env.example .env  →  nano .env          # uzupełnij wszystkie zmienne
 #   3. make prod-build                              # zbuduj image (uv + lock files)
-#   4. make prod-up                                 # uruchom cały stack
-#   5. make prod-migrate                            # wykonaj migracje bazy
-#   6. make prod-collectstatic                      # skopiuj pliki statyczne
-#   7. make prod-createsuperuser                    # utwórz konto admina
-#   8. make prod-ssl DOMAIN=example.com EMAIL=admin@example.com
-#                                                   # pobierz certyfikat Let's Encrypt
+#   4. make prod-ssl-init DOMAIN=example.com EMAIL=admin@example.com
+#                                                   # pierwszy certyfikat — przed startem nginx
+#   5. make prod-up                                 # uruchom cały stack
+#   6. make prod-migrate                            # wykonaj migracje bazy
+#   7. make prod-collectstatic                      # skopiuj pliki statyczne
+#   8. make prod-createsuperuser                    # utwórz konto admina
 #   9. make prod-logs                               # sprawdź czy wszystko działa
 #
 # Każda kolejna aktualizacja:
@@ -164,14 +164,15 @@ prod-createsuperuser:
 prod-shell:
 	docker compose -f docker-compose.prod.yml exec web python manage.py shell
 
-prod-ssl:
-	docker compose -f docker-compose.prod.yml run --rm certbot \
-		certonly --webroot --webroot-path=/var/www/certbot \
-		-d $(DOMAIN) --email $(EMAIL) --agree-tos --non-interactive
-	docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+# Pierwszy certyfikat: certbot sam nasłuchuje na porcie 80, więc nginx nie może jeszcze działać
+prod-ssl-init:
+	docker compose -f docker-compose.prod.yml run --rm -p 80:80 certbot \
+		certonly --standalone \
+		-d $(DOMAIN) -d www.$(DOMAIN) --email $(EMAIL) --agree-tos --non-interactive
 
+# --webroot jawnie: certbot renew użyłby zapisanej metody standalone, a port 80 zajmuje nginx
 prod-ssl-renew:
-	docker compose -f docker-compose.prod.yml run --rm certbot renew --quiet
+	docker compose -f docker-compose.prod.yml run --rm certbot renew --webroot --webroot-path=/var/www/certbot --quiet
 	docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
 
 prod-cron-install:

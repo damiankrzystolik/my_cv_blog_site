@@ -186,7 +186,7 @@ Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbud
 ### Lokalnie z Dockerem
 
 ```bash
-cp .env .env
+cp .env.example .env
 # uzupełnij SECRET_KEY, DB_NAME, DB_USER, DB_PASSWORD
 
 make docker-build
@@ -221,6 +221,7 @@ DJANGO_SETTINGS_MODULE=config.settings.development
 
 # Produkcja
 ALLOWED_HOSTS=
+DOMAIN=                  # domena bez https:// i www, np. example.com — nginx i certyfikat
 CORS_ALLOWED_ORIGINS=
 CSRF_TRUSTED_ORIGINS=
 SENTRY_DSN=
@@ -298,7 +299,7 @@ make prod-up                   # uruchom cały stack
 make prod-migrate              # migracje
 make prod-collectstatic        # pliki statyczne
 make prod-createsuperuser      # konto admina
-make prod-ssl DOMAIN=example.com EMAIL=admin@example.com  # certyfikat SSL
+make prod-ssl-init DOMAIN=example.com EMAIL=admin@example.com  # pierwszy certyfikat SSL (przed prod-up)
 make prod-cron-install         # autoodnowienie certyfikatu (cron co 12h, wpisuje się do crontab)
 make prod-logs                 # sprawdź logi
 make prod-deploy               # kolejne aktualizacje: build + up + migrate + collectstatic
@@ -328,18 +329,19 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 git clone <repo> && cd <repo>
 
-cp .env .env
-nano .env                  # uzupełnij SECRET_KEY, DB_*, ALLOWED_HOSTS, GRAFANA_ADMIN_PASSWORD ...
+cp .env.example .env
+nano .env                  # uzupełnij SECRET_KEY, DB_*, DOMAIN, ALLOWED_HOSTS, GRAFANA_ADMIN_PASSWORD ...
 
 make prod-build            # zbuduj image (pobiera uv, instaluje z lock files)
+
+# pierwszy certyfikat SSL — przed startem nginx; domena i www muszą już wskazywać na serwer (rekordy A w DNS)
+make prod-ssl-init DOMAIN=example.com EMAIL=admin@example.com
+
 make prod-up               # uruchom: db, web, nginx, certbot, prometheus, grafana
 make prod-migrate
 make prod-collectstatic
 make prod-createsuperuser
 make prod-shell            # załóż urządzenie 2FA dla admina — patrz "Panel admina — 2FA"
-
-# certyfikat SSL — domena musi już wskazywać na serwer (A record w DNS)
-make prod-ssl DOMAIN=example.com EMAIL=admin@example.com
 
 # autoodnowienie — wpisuje zadanie do crontab hosta, uruchamia certbot co 12h
 # certbot pomija odnowienie jeśli certyfikat ma >30 dni ważności, więc jest bezpieczne

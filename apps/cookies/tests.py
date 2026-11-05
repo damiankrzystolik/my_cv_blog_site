@@ -6,11 +6,12 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.core.utils import get_client_ip
+
 from . import conf
 from .management.commands.cleanup_consents import Command as CleanupCommand
 from .middleware import CookieConsentMiddleware
 from .models import Cookie, CookieConsent, CookieConsentLog, CookieGroup
-from .views import get_client_ip
 
 User = get_user_model()
 
@@ -291,16 +292,17 @@ class CookieConsentViewsTests(TestCase):
         self.assertTrue(consent.accepted_groups.filter(name="necessary").exists())
         self.assertTrue(CookieConsentLog.objects.filter(action="withdraw").exists())
 
-    def test_get_client_ip_with_forwarded_for(self):
+    def test_get_client_ip_uses_real_ip_not_forwarded_for(self):
         from django.http import HttpRequest
 
         request = HttpRequest()
+        request.META["HTTP_X_REAL_IP"] = "203.0.113.5"
         request.META["HTTP_X_FORWARDED_FOR"] = "192.168.1.1, 10.0.0.1"
         request.META["REMOTE_ADDR"] = "127.0.0.1"
 
-        self.assertEqual(get_client_ip(request), "192.168.1.1")
+        self.assertEqual(get_client_ip(request), "203.0.113.5")
 
-    def test_get_client_ip_without_forwarded_for(self):
+    def test_get_client_ip_falls_back_to_remote_addr(self):
         from django.http import HttpRequest
 
         request = HttpRequest()
@@ -349,6 +351,15 @@ class CookieConsentTemplateTagTests(TestCase):
         rendered = template.render(Context({"request": request}))
 
         self.assertNotIn("cookie-banner", rendered)
+
+    def test_banner_contains_csrf_token(self):
+        # cookies.js czyta token z baneru, bo CSRF_COOKIE_HTTPONLY ukrywa ciasteczko przed JS.
+        response = self.client.get(reverse("cookies:policy"))
+
+        self.assertRegex(
+            response.content.decode(),
+            r"data-cookie-banner[^>]*>\s*<input[^>]*csrfmiddlewaretoken",
+        )
 
 
 class CleanupConsentsCommandTests(TestCase):
