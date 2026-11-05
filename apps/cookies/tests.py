@@ -350,6 +350,15 @@ class CookieConsentTemplateTagTests(TestCase):
 
         self.assertNotIn("cookie-banner", rendered)
 
+    def test_banner_contains_csrf_token(self):
+        # cookies.js czyta token z baneru, bo CSRF_COOKIE_HTTPONLY ukrywa ciasteczko przed JS.
+        response = self.client.get(reverse("cookies:policy"))
+
+        self.assertRegex(
+            response.content.decode(),
+            r"data-cookie-banner[^>]*>\s*<input[^>]*csrfmiddlewaretoken",
+        )
+
 
 class CleanupConsentsCommandTests(TestCase):
     """PLAN.md A3/C5/G3: retencja danych przez komendę zarządzającą, nie przez

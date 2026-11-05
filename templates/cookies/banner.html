@@ -11,8 +11,8 @@ static/cookies/js/cookies.js), nie inline - dzięki temu strona może mieć
 restrykcyjne CSP bez 'unsafe-inline' (PLAN.md E1-E3).
 {% endcomment %}
 {% if show_banner %}
-{% csrf_token %}
 <div class="cookie-banner" id="cookieBanner" data-cookie-banner data-consent-url="{% url 'cookies:consent' %}" role="dialog" aria-live="polite">
+    {% csrf_token %}
     <div class="cookie-banner-content">
         <div class="cookie-banner-text">
             <p><strong>Ta strona używa ciasteczek</strong></p>

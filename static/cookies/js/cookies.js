@@ -9,17 +9,16 @@
 (function () {
     "use strict";
 
-    function getCsrfCookie() {
-        const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : null;
+    function getCsrfToken(banner) {
+        return banner.querySelector("[name=csrfmiddlewaretoken]").value;
     }
 
-    function sendConsent(url, action) {
+    function sendConsent(url, action, csrfToken) {
         return fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": getCsrfCookie(),
+                "X-CSRFToken": csrfToken,
             },
             body: JSON.stringify({ action: action }),
         }).then(function (response) {
@@ -35,7 +34,7 @@
             if (!url) {
                 return;
             }
-            sendConsent(url, actionEl.getAttribute("data-cookie-action"))
+            sendConsent(url, actionEl.getAttribute("data-cookie-action"), getCsrfToken(banner))
                 .then(function (data) {
                     if (data.success) {
                         banner.style.display = "none";
@@ -44,7 +43,7 @@
                 })
                 .catch(function (error) {
                     console.error("Cookie consent error:", error);
-                });
+                })
             return;
         }
 
