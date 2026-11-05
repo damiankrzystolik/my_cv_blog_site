@@ -186,7 +186,7 @@ Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbud
 ### Lokalnie z Dockerem
 
 ```bash
-cp .env .env
+cp .env.example .env
 # uzupełnij SECRET_KEY, DB_NAME, DB_USER, DB_PASSWORD
 
 make docker-build
@@ -329,8 +329,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 git clone <repo> && cd <repo>
 
-cp .env .env
-nano .env                  # uzupełnij SECRET_KEY, DB_*, ALLOWED_HOSTS, GRAFANA_ADMIN_PASSWORD ...
+cp .env.example .env
+nano .env                  # uzupełnij SECRET_KEY, DB_*, DOMAIN, ALLOWED_HOSTS, GRAFANA_ADMIN_PASSWORD ...
 
 make prod-build            # zbuduj image (pobiera uv, instaluje z lock files)
 
