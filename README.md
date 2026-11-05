@@ -221,6 +221,7 @@ DJANGO_SETTINGS_MODULE=config.settings.development
 
 # Produkcja
 ALLOWED_HOSTS=
+DOMAIN=                  # domena bez https:// i www, np. example.com — nginx i certyfikat
 CORS_ALLOWED_ORIGINS=
 CSRF_TRUSTED_ORIGINS=
 SENTRY_DSN=

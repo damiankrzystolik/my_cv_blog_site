@@ -62,6 +62,8 @@ services:
   nginx:
     image: nginx:1.25.5
     restart: always
+    environment:
+      - DOMAIN=${DOMAIN:?DOMAIN is not set in .env}
     volumes:
       - ./config/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - static_volume:/app/staticfiles
