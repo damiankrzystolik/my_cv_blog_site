@@ -58,12 +58,14 @@ server {
 
     location /health/ {
         include uwsgi_params;
+        uwsgi_param HTTP_X_REAL_IP $remote_addr;
         uwsgi_pass web:8000;
         access_log off;
     }
 
     location / {
         include uwsgi_params;
+        uwsgi_param HTTP_X_REAL_IP $remote_addr;
         uwsgi_pass web:8000;
     }
 }
