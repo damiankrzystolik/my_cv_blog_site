@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-11-22
+### Changed
+- Logi kontenerów produkcyjnych mają limit: najwyżej 3 pliki po 10 MB na kontener (`json-file` z rotacją, wspólna konfiguracja `x-logging` w `docker-compose.prod.yml`). Wcześniej rosły bez ograniczeń i z czasem zapełniłyby dysk serwera
+- README: `make` i `git` w wymaganiach na serwerze — minimalny Ubuntu na Hetznerze nie ma `make`, którego potrzebują wszystkie targety `prod-*`
+
 ## [0.8.2] - 2026-11-22
 ### Fixed
 - Puste metryki HTTP w Prometheusie/Grafanie: uWSGI ładował Django w procesie master, więc eksporter django-prometheus działał tylko tam i nie widział requestów obsługiwanych przez workery. uWSGI działa teraz z `lazy-apps`, każdy z 4 workerów wystawia własny eksporter na pierwszym wolnym porcie z zakresu `9100`–`9103`, a Prometheus zbiera ze wszystkich czterech. Znika też ostrzeżenie Sentry o preforkingu uWSGI bez obsługi wątków
