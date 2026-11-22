@@ -76,9 +76,9 @@ Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbud
 **django-prometheus** — instrumentuje Django bez zmian w kodzie aplikacji:
 - middleware mierzy czas i liczbę requestów HTTP (z podziałem na status, metodę, widok)
 - backend bazy mierzy zapytania SQL
-- metryki eksportuje na porcie `9100` (wewnętrznym, niedostępnym z zewnątrz)
+- metryki eksportuje na portach `9100`–`9103`, po jednym na worker uWSGI (wewnętrznych, niedostępnych z zewnątrz)
 
-**Prometheus** — baza danych szeregów czasowych wyspecjalizowana w metrykach. Co 15s robi GET na `web:9100/metrics` i zapisuje dane. Posiada własny język zapytań (PromQL) i silnik alertów. Dane trzymane 30 dni (konfigurowalne).
+**Prometheus** — baza danych szeregów czasowych wyspecjalizowana w metrykach. Co 15s robi GET na `web:9100`–`9103/metrics` i zapisuje dane. Posiada własny język zapytań (PromQL) i silnik alertów. Dane trzymane 30 dni (konfigurowalne).
 
 **Grafana** — wizualizacja metryk z Prometheusa. Dostępna na `localhost:3000` (przez SSH tunnel — nie wystawiona publicznie). Datasource i lokalizacja dashboardów skonfigurowane automatycznie przez provisioning (`config/grafana/provisioning/`). Import gotowych dashboardów: [Django](https://grafana.com/grafana/dashboards/17658), [PostgreSQL](https://grafana.com/grafana/dashboards/9628).
 
@@ -152,7 +152,7 @@ Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbud
 │   │   ├── local.conf.template     # HTTP, proxy do runserver
 │   │   └── default.conf.template   # HTTPS + Let's Encrypt
 │   ├── prometheus/
-│   │   ├── prometheus.yml      # scrape config (web:9100)
+│   │   ├── prometheus.yml      # scrape config (web:9100–9103)
 │   │   └── alerts.yml          # reguły alertów (500 errors, slow responses)
 │   ├── grafana/
 │   │   └── provisioning/
@@ -436,13 +436,13 @@ ssh -L 9090:localhost:9090 -L 3000:localhost:3000 user@your-server.com
 
 Porty `9090` i `3000` **nie są wystawione publicznie** — bindują tylko do `127.0.0.1` na serwerze.
 
-Port `9100` (metryki Django) nie jest wystawiony w ogóle poza siecią Docker — dostępny tylko dla kontenera Prometheus.
+Porty `9100`–`9103` (metryki Django) nie są wystawione w ogóle poza siecią Docker — dostępne tylko dla kontenera Prometheus.
 
 ### Architektura monitoringu
 
 ```
 internet ──► nginx:443 ──► web:8000 (uWSGI)
-                               │ :9100/metrics (tylko sieć Docker)
+                               │ :9100–9103/metrics (tylko sieć Docker)
                                ▼
                           prometheus:9090 ──scrape co 15s
                                │
