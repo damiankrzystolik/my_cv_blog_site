@@ -5,7 +5,8 @@
         docker-shell docker-test docker-clean docker-check-deploy \
         prod-build prod-up prod-deploy prod-down prod-restart prod-logs \
         prod-migrate prod-collectstatic prod-createsuperuser prod-shell \
-        prod-ssl-init prod-ssl-renew prod-cron-install prod-cron-remove
+        prod-ssl-init prod-ssl-renew prod-cron-install prod-cron-remove \
+        prod-backup prod-backup-cron-install prod-backup-cron-remove
 
 # Wymagania lokalne: python 3.12+, uv (pip install uv), make
 # Wymagania na serwerze: git, make, docker (z docker compose v2)
@@ -182,3 +183,31 @@ prod-cron-install:
 prod-cron-remove:
 	crontab -l 2>/dev/null | grep -v "$(PWD).*prod-ssl-renew" | crontab -
 	@echo "Cron usunięty."
+
+# Backup: zrzut bazy (pg_dump) + archiwum mediów (obrazki postów), rotacja po BACKUP_KEEP_DAYS.
+# Najpierw zapis do pliku, potem gzip — w potoku `pg_dump | gzip` błąd pg_dump
+# zginąłby (sh nie ma pipefail) i zostałby pusty, "udany" backup.
+BACKUP_DIR ?= $(HOME)/backups/my_cv_blog_site
+BACKUP_KEEP_DAYS ?= 14
+
+prod-backup:
+	@set -e; mkdir -p $(BACKUP_DIR); ts=$$(date +%Y%m%d_%H%M%S); \
+	db=$(BACKUP_DIR)/db_$$ts.sql; media=$(BACKUP_DIR)/media_$$ts.tar.gz; \
+	docker compose -f docker-compose.prod.yml exec -T db \
+		sh -c 'pg_dump -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" --no-owner' > $$db \
+		|| { rm -f $$db; echo "pg_dump nie powiódł się"; exit 1; }; \
+	gzip $$db; \
+	docker compose -f docker-compose.prod.yml exec -T web tar czf - -C /app media > $$media \
+		|| { rm -f $$media; echo "Archiwum mediów nie powiodło się"; exit 1; }; \
+	find $(BACKUP_DIR) -name 'db_*.sql.gz' -mtime +$(BACKUP_KEEP_DAYS) -delete; \
+	find $(BACKUP_DIR) -name 'media_*.tar.gz' -mtime +$(BACKUP_KEEP_DAYS) -delete; \
+	echo "$$(date '+%F %T') backup OK: db_$$ts.sql.gz, media_$$ts.tar.gz"
+
+# Codziennie 3:30 (po odnowieniu certyfikatu o 3:00); ponowne uruchomienie nie dubluje wpisu
+prod-backup-cron-install:
+	(crontab -l 2>/dev/null | grep -v "$(PWD).*prod-backup"; echo "30 3 * * * cd $(PWD) && make prod-backup >> /var/log/my_cv_blog_site-backup.log 2>&1") | crontab -
+	@echo "Cron backupu zainstalowany. Sprawdź: crontab -l"
+
+prod-backup-cron-remove:
+	crontab -l 2>/dev/null | grep -v "$(PWD).*prod-backup" | crontab -
+	@echo "Cron backupu usunięty."
