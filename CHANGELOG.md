@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-22
+### Fixed
+- Kontener `web` na produkcji nie startował i restartował się w pętli: uWSGI, kompilowane w etapie `builder`, jest zlinkowane z `libexpat`, której nie ma w obrazie `python:3.12-slim`. `libexpat1` dodane do pakietów obrazu produkcyjnego
+- `make prod-migrate`, `prod-collectstatic`, `prod-createsuperuser`, `prod-shell` i `prod-deploy` kończyły się błędem `Address already in use`: django-prometheus przy każdym starcie Django otwierał eksporter metryk na porcie `9100`, zajętym już przez uWSGI w tym samym kontenerze. Eksporter włącza się teraz tylko w procesie uWSGI
+
 ## [0.7.0] - 2026-11-05
 ### Added
 - `make prod-ssl-init` — pierwszy certyfikat Let's Encrypt dla domeny i `www`, uruchamiany przed startem nginx (certbot `--standalone` na porcie 80). Rozwiązuje błędne koło: nginx nie startował bez certyfikatu, a dotychczasowy tryb `--webroot` wymagał działającego nginx
