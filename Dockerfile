@@ -35,9 +35,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONFAULTHANDLER=1 \
     PATH="/opt/venv/bin:$PATH"
 
+# libexpat1 — uWSGI z buildera jest z nią zlinkowane, a obraz slim jej nie ma
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     libmagic1 \
+    libexpat1 \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
