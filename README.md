@@ -320,6 +320,9 @@ make prod-down
 ### Wymagania na serwerze
 
 ```bash
+# make i git (minimalny Ubuntu na Hetznerze nie ma make)
+apt install -y make git
+
 # docker + docker compose v2
 curl -fsSL https://get.docker.com | sh
 
