@@ -35,6 +35,12 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
+    # Adres `web` rozwiązywany przez DNS Dockera przy każdym żądaniu (zmienna w uwsgi_pass).
+    # Statyczne `uwsgi_pass web:8000` zapamiętuje IP przy starcie nginx — po odtworzeniu
+    # kontenera web (prod-up po zmianie .env, prod-deploy) dawało 502 "No route to host".
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $web_upstream web:8000;
+
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "DENY" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -60,7 +66,7 @@ server {
         include uwsgi_params;
         uwsgi_param HTTP_X_REAL_IP $remote_addr;
         uwsgi_param HTTP_X_FORWARDED_PROTO $scheme;
-        uwsgi_pass web:8000;
+        uwsgi_pass $web_upstream;
         access_log off;
     }
 
@@ -68,6 +74,6 @@ server {
         include uwsgi_params;
         uwsgi_param HTTP_X_REAL_IP $remote_addr;
         uwsgi_param HTTP_X_FORWARDED_PROTO $scheme;
-        uwsgi_pass web:8000;
+        uwsgi_pass $web_upstream;
     }
 }
