@@ -41,8 +41,16 @@ CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv())
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=Csv())
 
-PROMETHEUS_METRICS_EXPORT_PORT = 9100
-PROMETHEUS_METRICS_EXPORT_ADDRESS = "0.0.0.0"
+# Eksporter metryk tylko w procesie uWSGI (moduł `uwsgi` istnieje wyłącznie tam).
+# Komendy manage.py przez `docker compose exec` działają w tym samym kontenerze
+# i próbowałyby zająć zajęty już port 9100 (OSError: Address already in use).
+try:
+    import uwsgi  # noqa: F401
+except ImportError:
+    pass
+else:
+    PROMETHEUS_METRICS_EXPORT_PORT = 9100
+    PROMETHEUS_METRICS_EXPORT_ADDRESS = "0.0.0.0"
 
 sentry_sdk.init(
     dsn=config("SENTRY_DSN", default=None),
