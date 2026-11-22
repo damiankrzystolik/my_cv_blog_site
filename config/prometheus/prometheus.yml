@@ -14,7 +14,8 @@ scrape_configs:
   - job_name: django
     scrape_interval: 15s
     static_configs:
-      - targets: ['web:9100']
+      # Jeden eksporter na worker uWSGI (processes = 4 w uwsgi.ini)
+      - targets: ['web:9100', 'web:9101', 'web:9102', 'web:9103']
     metrics_path: /metrics
 
   - job_name: prometheus
