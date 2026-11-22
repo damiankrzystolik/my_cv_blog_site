@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-11-22
+### Fixed
+- Puste metryki HTTP w Prometheusie/Grafanie: uWSGI ładował Django w procesie master, więc eksporter django-prometheus działał tylko tam i nie widział requestów obsługiwanych przez workery. uWSGI działa teraz z `lazy-apps`, każdy z 4 workerów wystawia własny eksporter na pierwszym wolnym porcie z zakresu `9100`–`9103`, a Prometheus zbiera ze wszystkich czterech. Znika też ostrzeżenie Sentry o preforkingu uWSGI bez obsługi wątków
+
 ## [0.8.1] - 2026-11-22
 ### Fixed
 - 502 Bad Gateway po odtworzeniu kontenera `web` (`make prod-up` po zmianie `.env`, `make prod-deploy`): nginx zapamiętywał adres IP `web` przy starcie i dalej łączył się ze starym. Adres jest teraz rozwiązywany przez DNS Dockera (`resolver 127.0.0.11`, cache 10 s)
