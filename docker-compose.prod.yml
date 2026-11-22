@@ -57,7 +57,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    # port 9100 intentionally not exposed to host — only reachable within Docker network by Prometheus
+    # ports 9100-9103 (one metrics exporter per uWSGI worker) intentionally not exposed to host — only reachable within Docker network by Prometheus
 
   nginx:
     image: nginx:1.25.5

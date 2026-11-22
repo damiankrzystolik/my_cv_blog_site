@@ -43,13 +43,15 @@ CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=Csv())
 
 # Eksporter metryk tylko w procesie uWSGI (moduł `uwsgi` istnieje wyłącznie tam).
 # Komendy manage.py przez `docker compose exec` działają w tym samym kontenerze
-# i próbowałyby zająć zajęty już port 9100 (OSError: Address already in use).
+# i próbowałyby zająć zajęty już port (OSError: Address already in use).
+# Każdy worker uWSGI (lazy-apps) zajmuje pierwszy wolny port z zakresu —
+# zakres = `processes` z uwsgi.ini, Prometheus zbiera z web:9100–9103.
 try:
     import uwsgi  # noqa: F401
 except ImportError:
     pass
 else:
-    PROMETHEUS_METRICS_EXPORT_PORT = 9100
+    PROMETHEUS_METRICS_EXPORT_PORT_RANGE = range(9100, 9104)
     PROMETHEUS_METRICS_EXPORT_ADDRESS = "0.0.0.0"
 
 sentry_sdk.init(
