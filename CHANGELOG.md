@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-22
+### Fixed
+- 502 Bad Gateway po odtworzeniu kontenera `web` (`make prod-up` po zmianie `.env`, `make prod-deploy`): nginx zapamiętywał adres IP `web` przy starcie i dalej łączył się ze starym. Adres jest teraz rozwiązywany przez DNS Dockera (`resolver 127.0.0.11`, cache 10 s)
+- uWSGI co sekundę wpisywał do logów `uwsgi_check_logrotate()/lseek(): Illegal seek` — usunięte `logto = /dev/stdout`, logi idą na stderr, który Docker zbiera tak samo
+
 ## [0.8.0] - 2026-11-22
 ### Added
 - `make prod-backup` — zrzut bazy (`pg_dump`) i archiwum mediów (obrazki postów) do `~/backups/my_cv_blog_site/`, z usuwaniem plików starszych niż 14 dni (`BACKUP_KEEP_DAYS`). Błąd `pg_dump` przerywa target zamiast zostawić pusty plik backupu
