@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-22
+### Added
+- `make prod-backup` — zrzut bazy (`pg_dump`) i archiwum mediów (obrazki postów) do `~/backups/my_cv_blog_site/`, z usuwaniem plików starszych niż 14 dni (`BACKUP_KEEP_DAYS`). Błąd `pg_dump` przerywa target zamiast zostawić pusty plik backupu
+- `make prod-backup-cron-install` / `prod-backup-cron-remove` — codzienny backup o 3:30 w crontab hosta
+- Sekcja „Backup” w README: kopiowanie backupu poza serwer, odtwarzanie bazy i mediów
+
 ## [0.7.1] - 2026-11-22
 ### Fixed
 - Kontener `web` na produkcji nie startował i restartował się w pętli: uWSGI, kompilowane w etapie `builder`, jest zlinkowane z `libexpat`, której nie ma w obrazie `python:3.12-slim`. `libexpat1` dodane do pakietów obrazu produkcyjnego

@@ -306,6 +306,9 @@ make prod-deploy               # kolejne aktualizacje: build + up + migrate + co
 make prod-restart              # restart tylko kontenera web
 make prod-ssl-renew            # ręczne wymuszenie odnowienia certyfikatu
 make prod-cron-remove          # usuń autoodnowienie z crontab
+make prod-backup               # zrzut bazy + archiwum mediów do ~/backups/my_cv_blog_site (rotacja 14 dni)
+make prod-backup-cron-install  # codzienny backup o 3:30 (cron)
+make prod-backup-cron-remove   # usuń backup z crontab
 make prod-shell                # manage.py shell
 make prod-down
 ```
@@ -355,6 +358,36 @@ make prod-logs             # sprawdź czy wszystko działa
 ```bash
 git pull
 make prod-deploy           # build web + up + migrate + collectstatic jedną komendą
+```
+
+### Backup
+
+`make prod-backup` zapisuje do `~/backups/my_cv_blog_site/`:
+
+- `db_<data>.sql.gz` — `pg_dump` bazy (czysty SQL, bez właściciela obiektów),
+- `media_<data>.tar.gz` — katalog `media` (obrazki postów).
+
+Pliki starsze niż 14 dni są usuwane (`BACKUP_KEEP_DAYS`, np. `make prod-backup BACKUP_KEEP_DAYS=30`). `make prod-backup-cron-install` uruchamia backup codziennie o 3:30, log w `/var/log/my_cv_blog_site-backup.log`.
+
+Backup leży na tym samym dysku co baza — co jakiś czas skopiuj go poza serwer (PowerShell):
+
+```powershell
+scp -r root@<IP>:/root/backups/my_cv_blog_site .
+```
+
+Odtworzenie bazy (nadpisuje obecne dane):
+
+```bash
+docker compose -f docker-compose.prod.yml stop web
+docker compose -f docker-compose.prod.yml exec -T db sh -c 'dropdb -U "$POSTGRES_USER" "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
+gunzip -c ~/backups/my_cv_blog_site/db_<data>.sql.gz | docker compose -f docker-compose.prod.yml exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+docker compose -f docker-compose.prod.yml start web
+```
+
+Odtworzenie mediów:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T web tar xzf - -C /app < ~/backups/my_cv_blog_site/media_<data>.tar.gz
 ```
 
 ---
