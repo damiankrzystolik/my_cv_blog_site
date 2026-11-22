@@ -1,5 +1,13 @@
+# Rotacja logów kontenerów: domyślny sterownik json-file nie ma limitu i zapełniłby dysk
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
+    logging: *default-logging
     image: postgres:17.4-alpine
     restart: always
     volumes:
@@ -15,6 +23,7 @@ services:
       retries: 5
 
   web:
+    logging: *default-logging
     build:
       context: .
       args:
@@ -60,6 +69,7 @@ services:
     # ports 9100-9103 (one metrics exporter per uWSGI worker) intentionally not exposed to host — only reachable within Docker network by Prometheus
 
   nginx:
+    logging: *default-logging
     image: nginx:1.25.5
     restart: always
     environment:
@@ -78,12 +88,14 @@ services:
         condition: service_healthy
 
   certbot:
+    logging: *default-logging
     image: certbot/certbot
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
 
   prometheus:
+    logging: *default-logging
     image: prom/prometheus:v2.52.0
     restart: always
     volumes:
@@ -100,6 +112,7 @@ services:
       - web
 
   grafana:
+    logging: *default-logging
     image: grafana/grafana:11.0.0
     restart: always
     volumes:
