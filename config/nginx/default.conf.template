@@ -1,5 +1,8 @@
 # Domenę podstawia entrypoint obrazu nginx ze zmiennej DOMAIN (.env)
 
+# Bez wersji nginx w nagłówku Server i na stronach błędów
+server_tokens off;
+
 server {
     listen 80 default_server;
     listen 443 ssl default_server;
@@ -62,7 +65,11 @@ server {
         add_header X-Content-Type-Options nosniff;
     }
 
+    # Health check tylko z wnętrza kontenera nginx (uWSGI mówi protokołem uwsgi, nie HTTP,
+    # więc inaczej się do niego nie dobijesz). Z internetu 403.
     location /health/ {
+        allow 127.0.0.1;
+        deny all;
         include uwsgi_params;
         uwsgi_param HTTP_X_REAL_IP $remote_addr;
         uwsgi_param HTTP_X_FORWARDED_PROTO $scheme;

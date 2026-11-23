@@ -21,7 +21,8 @@ def health_check(request):
     except Exception as e:
         logger.error("health_check_database_failed", error=str(e))
         health["status"] = "unhealthy"
-        health["checks"]["database"] = {"status": "unhealthy", "error": str(e)}
+        # Treść wyjątku tylko w logach — komunikat psycopg zawiera host, bazę i użytkownika.
+        health["checks"]["database"] = {"status": "unhealthy"}
 
     status_code = 200 if health["status"] == "healthy" else 503
     return JsonResponse(health, status=status_code)

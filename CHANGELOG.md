@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-11-23
+### Removed
+- Publiczny endpoint rejestracji `POST /api/users/` (`AllowAny`) — każdy mógł zakładać konta w bazie produkcyjnej. Usunięte widok i trasa; serializer, `UserService` i konfiguracja DRF zostają pod przyszłe API
+
+### Fixed
+- `/metrics` było dostępne z internetu przez URL-e Django. Teraz tylko przy `DEBUG` — na produkcji Prometheus i tak zbiera z eksporterów `web:9100`–`9103` w sieci Dockera, a ten URL pokazywał metryki jednego workera uWSGI
+- `/health/` z internetu zwraca 403 (nginx przepuszcza tylko `127.0.0.1`), a przy awarii bazy odpowiedź nie zawiera już treści wyjątku (host, nazwa bazy, użytkownik) — ta trafia tylko do logów
+- `HEALTHCHECK` w `Dockerfile` zawsze kończył się błędem: wysyłał zapytanie HTTP, a uWSGI słucha protokołem uwsgi. Teraz `nc -z localhost 8000`, tak jak healthcheck w compose
+- nginx nie pokazuje swojej wersji w nagłówku `Server` i na stronach błędów (`server_tokens off`)
+
 ## [0.8.3] - 2026-11-22
 ### Changed
 - Logi kontenerów produkcyjnych mają limit: najwyżej 3 pliki po 10 MB na kontener (`json-file` z rotacją, wspólna konfiguracja `x-logging` w `docker-compose.prod.yml`). Wcześniej rosły bez ograniczeń i z czasem zapełniłyby dysk serwera

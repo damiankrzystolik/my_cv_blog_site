@@ -128,7 +128,7 @@ Osobista strona portfolio — CV na stronie tytułowej i blog pod `/blog/`. Zbud
 │   │   ├── validators.py       # validate_file_extension (MIME + magic bytes)
 │   │   ├── middleware.py       # RequestContextMiddleware (request_id)
 │   │   └── exceptions.py
-│   ├── users/                  # custom user model + CRUD API
+│   ├── users/                  # custom user model (+ serializer i serwis pod przyszłe API)
 │   ├── cookies/                # cookie consent management (banner, preferences, policy)
 │   │   ├── models.py           # CookieConsent
 │   │   ├── middleware.py       # CookieConsentMiddleware
@@ -440,6 +440,8 @@ ssh -L 9090:localhost:9090 -L 3000:localhost:3000 user@your-server.com
 Porty `9090` i `3000` **nie są wystawione publicznie** — bindują tylko do `127.0.0.1` na serwerze.
 
 Porty `9100`–`9103` (metryki Django) nie są wystawione w ogóle poza siecią Docker — dostępne tylko dla kontenera Prometheus.
+
+Django nie serwuje `/metrics` na produkcji (tylko przy `DEBUG`), a `/health/` nginx przepuszcza wyłącznie z `127.0.0.1` — z internetu oba są niedostępne (404 / 403).
 
 ### Architektura monitoringu
 
