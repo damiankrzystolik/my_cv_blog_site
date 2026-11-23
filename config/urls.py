@@ -30,10 +30,8 @@ sitemaps = {"posts": PostSitemap, "tags": TagSitemap}
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
-    path("api/", include("apps.users.urls")),
     path("cookies/", include("apps.cookies.urls")),
     # path("", TemplateView.as_view(template_name="base.html"), name="home"),
-    path("", include("django_prometheus.urls")),
     path("health/", include("apps.core.urls")),
     path("", include("apps.cv.urls")),
     path("blog/", include("apps.blog.urls")),
@@ -44,4 +42,7 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
+    # /metrics tylko lokalnie. Na produkcji Prometheus zbiera z eksporterów web:9100–9103
+    # (sieć Dockera), a ten URL byłby publiczny i pokazywał metryki jednego workera uWSGI.
+    urlpatterns += [path("", include("django_prometheus.urls"))]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
