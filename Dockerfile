@@ -60,7 +60,9 @@ USER appuser
 
 EXPOSE 8000
 
+# uWSGI słucha protokołem uwsgi (socket = :8000), nie HTTP — zapytanie HTTP zawsze by padło.
+# Sprawdzamy tylko, czy port przyjmuje połączenia (tak samo jak healthcheck w compose).
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')" || exit 1
+    CMD nc -z localhost 8000 || exit 1
 
 CMD ["uwsgi", "--ini", "/app/config/uwsgi/uwsgi.ini"]
